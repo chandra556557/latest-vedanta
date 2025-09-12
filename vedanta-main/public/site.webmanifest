@@ -1,0 +1,25 @@
+{
+  "name": "Vedanta Hospital - Best Multi-Specialty Hospital in Guntur",
+  "short_name": "Vedanta Hospital",
+  "description": "Leading multi-specialty hospital in Guntur, Andhra Pradesh since 1995. Expert doctors, advanced medical technology, 24/7 emergency care.",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#0ea5e9",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "start_url": "/",
+  "scope": "/",
+  "orientation": "portrait-primary",
+  "categories": ["health", "medical", "hospital"],
+  "lang": "en-IN"
+}

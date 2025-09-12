@@ -1,0 +1,31 @@
+User-agent: *
+Allow: /
+
+# Sitemaps
+Sitemap: https://vedantahospitals.in/sitemap.xml
+
+# Crawl-delay
+Crawl-delay: 1
+
+# Specific rules for search engines
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# Block access to admin areas (if any)
+Disallow: /admin/
+Disallow: /private/
+Disallow: /*.json$
+
+# Allow access to important pages
+Allow: /about
+Allow: /services
+Allow: /doctors
+Allow: /contact
+Allow: /packages
+Allow: /ai-services
+Allow: /advanced-features
+Allow: /testimonials
+Allow: /news

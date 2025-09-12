@@ -1,0 +1,43 @@
+# Node
+node_modules/
+dist/
+build/
+.vite/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# TypeScript
+*.tsbuildinfo
+
+# Netlify
+.netlify/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# IDE/OS
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Misc
+*.log
