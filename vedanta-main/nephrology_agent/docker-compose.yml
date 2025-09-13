@@ -1,0 +1,378 @@
+version: '3.8'
+
+services:
+  # Main Nephrology AI Application
+  nephroai-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nephroai-enterprise
+    restart: unless-stopped
+    ports:
+      - "8000:8000"  # FastAPI backend
+      - "8501:8501"  # Streamlit frontend
+    environment:
+      - ENVIRONMENT=production
+      - DATABASE_URL=sqlite:///data/nephroai.db
+      - REDIS_URL=redis://redis:6379/0
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - SMTP_SERVER=${SMTP_SERVER}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USERNAME=${SMTP_USERNAME}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - SENTRY_DSN=${SENTRY_DSN}
+      - LOG_LEVEL=INFO
+    volumes:
+      - nephroai_data:/app/data
+      - nephroai_logs:/app/logs
+      - nephroai_uploads:/app/uploads
+      - nephroai_backups:/app/backups
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - nephroai-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Redis for caching and session management
+  redis:
+    image: redis:7-alpine
+    container_name: nephroai-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    networks:
+      - nephroai-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # PostgreSQL for production database (alternative to SQLite)
+  postgres:
+    image: postgres:15-alpine
+    container_name: nephroai-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=nephroai
+      - POSTGRES_USER=nephroai
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database_schema_postgres.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - nephroai-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nephroai -d nephroai"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx reverse proxy and load balancer
+  nginx:
+    image: nginx:alpine
+    container_name: nephroai-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/ssl:/etc/nginx/ssl:ro
+      - nephroai_static:/var/www/static:ro
+    depends_on:
+      - nephroai-app
+    networks:
+      - nephroai-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Prometheus for monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: nephroai-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - nephroai-network
+
+  # Grafana for dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: nephroai-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./docker/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./docker/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    depends_on:
+      - prometheus
+    networks:
+      - nephroai-network
+
+  # Elasticsearch for advanced logging and search
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: nephroai-elasticsearch
+    restart: unless-stopped
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - xpack.security.enabled=false
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - nephroai-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Kibana for log visualization
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: nephroai-kibana
+    restart: unless-stopped
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    networks:
+      - nephroai-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5601/api/status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Logstash for log processing
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.11.0
+    container_name: nephroai-logstash
+    restart: unless-stopped
+    ports:
+      - "5044:5044"
+    volumes:
+      - ./docker/logstash/pipeline:/usr/share/logstash/pipeline:ro
+      - ./docker/logstash/config:/usr/share/logstash/config:ro
+    depends_on:
+      - elasticsearch
+    networks:
+      - nephroai-network
+
+  # Celery worker for background tasks
+  celery-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nephroai-celery-worker
+    restart: unless-stopped
+    command: celery -A nephro_tasks worker --loglevel=info --concurrency=4
+    environment:
+      - ENVIRONMENT=production
+      - DATABASE_URL=sqlite:///data/nephroai.db
+      - REDIS_URL=redis://redis:6379/0
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    volumes:
+      - nephroai_data:/app/data
+      - nephroai_logs:/app/logs
+      - nephroai_uploads:/app/uploads
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - nephroai-network
+
+  # Celery beat for scheduled tasks
+  celery-beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nephroai-celery-beat
+    restart: unless-stopped
+    command: celery -A nephro_tasks beat --loglevel=info
+    environment:
+      - ENVIRONMENT=production
+      - DATABASE_URL=sqlite:///data/nephroai.db
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - nephroai_data:/app/data
+      - nephroai_logs:/app/logs
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - nephroai-network
+
+  # Flower for Celery monitoring
+  flower:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nephroai-flower
+    restart: unless-stopped
+    ports:
+      - "5555:5555"
+    command: celery -A nephro_tasks flower --port=5555
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - FLOWER_BASIC_AUTH=${FLOWER_USERNAME}:${FLOWER_PASSWORD}
+    depends_on:
+      - redis
+      - celery-worker
+    networks:
+      - nephroai-network
+
+  # Backup service
+  backup:
+    image: alpine:latest
+    container_name: nephroai-backup
+    restart: "no"
+    volumes:
+      - nephroai_data:/backup/data:ro
+      - nephroai_backups:/backup/output
+      - ./docker/backup.sh:/backup.sh:ro
+    command: |
+      sh -c '
+        apk add --no-cache sqlite postgresql-client aws-cli
+        chmod +x /backup.sh
+        crond -f
+      '
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
+      - S3_BUCKET=${S3_BACKUP_BUCKET}
+    networks:
+      - nephroai-network
+
+  # Watchtower for automatic updates
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: nephroai-watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_POLL_INTERVAL=86400  # 24 hours
+      - WATCHTOWER_INCLUDE_STOPPED=true
+      - WATCHTOWER_NOTIFICATIONS=email
+      - WATCHTOWER_NOTIFICATION_EMAIL_FROM=${NOTIFICATION_EMAIL}
+      - WATCHTOWER_NOTIFICATION_EMAIL_TO=${ADMIN_EMAIL}
+      - WATCHTOWER_NOTIFICATION_EMAIL_SERVER=${SMTP_SERVER}
+      - WATCHTOWER_NOTIFICATION_EMAIL_SERVER_PORT=${SMTP_PORT}
+      - WATCHTOWER_NOTIFICATION_EMAIL_SERVER_USER=${SMTP_USERNAME}
+      - WATCHTOWER_NOTIFICATION_EMAIL_SERVER_PASSWORD=${SMTP_PASSWORD}
+    networks:
+      - nephroai-network
+
+volumes:
+  nephroai_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data
+  nephroai_logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./logs
+  nephroai_uploads:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./uploads
+  nephroai_backups:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./backups
+  nephroai_static:
+    driver: local
+  redis_data:
+    driver: local
+  postgres_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
+
+networks:
+  nephroai-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# Health check configuration
+x-healthcheck-defaults: &healthcheck-defaults
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 60s
+
+# Logging configuration
+x-logging-defaults: &logging-defaults
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+# Resource limits
+x-resource-defaults: &resource-defaults
+  deploy:
+    resources:
+      limits:
+        cpus: '2.0'
+        memory: 2G
+      reservations:
+        cpus: '0.5'
+        memory: 512M

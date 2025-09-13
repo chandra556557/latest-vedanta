@@ -140,5 +140,24 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Dr. Nephro Widget Integration -->
+    <script src="/nephro_widget.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Dr. Nephro Widget
+        try {
+          new NephroWidget({
+            apiUrl: 'http://localhost:8002',
+            position: 'bottom-right',
+            theme: 'default',
+            whatsappAware: true
+          });
+          console.log('Dr. Nephro widget initialized successfully!');
+        } catch (error) {
+          console.error('Failed to initialize Dr. Nephro widget:', error);
+        }
+      });
+    </script>
   </body>
 </html>

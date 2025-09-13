@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How to Add Dr. Nephro Widget to Your Website</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .step {
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .step h3 {
+            color: #007bff;
+            margin-top: 0;
+        }
+        
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .highlight {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        
+        .demo-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin: 30px 0;
+            text-align: center;
+        }
+        
+        .demo-section h2 {
+            margin-top: 0;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .feature-card {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+        
+        .status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 10px 15px;
+            border-radius: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            font-size: 14px;
+        }
+        
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+            background: #dc3545;
+        }
+        
+        .status-dot.online {
+            background: #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="status">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">Checking Dr. Nephro...</span>
+    </div>
+    
+    <div class="container">
+        <h1>🩺 How to Add Dr. Nephro Widget to Your Website</h1>
+        
+        <div class="demo-section">
+            <h2>✨ Live Demo</h2>
+            <p>The Dr. Nephro widget is already active on this page! Look for the floating chat button in the bottom-right corner.</p>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>💬 Real-time Chat</h4>
+                    <p>Instant kidney health consultations</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📱 Mobile Friendly</h4>
+                    <p>Works perfectly on all devices</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🎨 Customizable</h4>
+                    <p>Easy to style and position</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="step">
+            <h3>Step 1: Include the Widget Script</h3>
+            <p>Add the Dr. Nephro widget JavaScript file to your website. You can either:</p>
+            
+            <h4>Option A: Link to the file directly</h4>
+            <div class="code-block">
+&lt;script src="path/to/nephro_widget.js"&gt;&lt;/script&gt;
+            </div>
+            
+            <h4>Option B: Copy the script content inline</h4>
+            <div class="code-block">
+&lt;script&gt;
+// Copy the entire content of nephro_widget.js here
+&lt;/script&gt;
+            </div>
+        </div>
+        
+        <div class="step">
+            <h3>Step 2: Initialize the Widget</h3>
+            <p>Add this JavaScript code to initialize the widget:</p>
+            
+            <div class="code-block">
+&lt;script&gt;
+// Initialize Dr. Nephro Widget
+document.addEventListener('DOMContentLoaded', function() {
+    new NephroWidget({
+        apiUrl: 'http://localhost:8002',  // Your API server URL
+        position: 'bottom-right',        // 'bottom-right' or 'bottom-left'
+        theme: 'default'                 // Widget theme
+    });
+});
+&lt;/script&gt;
+            </div>
+        </div>
+        
+        <div class="step">
+            <h3>Step 3: Complete HTML Example</h3>
+            <p>Here's a complete example of how to integrate the widget:</p>
+            
+            <div class="code-block">
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;My Website with Dr. Nephro&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;!-- Your website content --&gt;
+    &lt;h1&gt;Welcome to My Healthcare Website&lt;/h1&gt;
+    &lt;p&gt;Your regular website content goes here...&lt;/p&gt;
+    
+    &lt;!-- Dr. Nephro Widget Integration --&gt;
+    &lt;script src="nephro_widget.js"&gt;&lt;/script&gt;
+    &lt;script&gt;
+        document.addEventListener('DOMContentLoaded', function() {
+            new NephroWidget({
+                apiUrl: 'http://localhost:8002',
+                position: 'bottom-right',
+                theme: 'default'
+            });
+        });
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+            </div>
+        </div>
+        
+        <div class="step">
+            <h3>Step 4: Configuration Options</h3>
+            <p>Customize the widget behavior with these options:</p>
+            
+            <div class="code-block">
+new NephroWidget({
+    apiUrl: 'http://localhost:8002',     // Required: Your API server URL
+    position: 'bottom-right',            // Optional: 'bottom-right' or 'bottom-left'
+    theme: 'default',                    // Optional: Widget theme
+    containerId: 'custom-container'      // Optional: Custom container ID
+});
+            </div>
+        </div>
+        
+        <div class="highlight">
+            <h4>🚨 Important Prerequisites</h4>
+            <ul>
+                <li><strong>API Server:</strong> Make sure your Dr. Nephro API server is running on port 8002</li>
+                <li><strong>CORS:</strong> Ensure your API server allows requests from your website domain</li>
+                <li><strong>HTTPS:</strong> For production, use HTTPS for both your website and API</li>
+            </ul>
+        </div>
+        
+        <div class="step">
+            <h3>Step 5: Start Required Services</h3>
+            <p>Before the widget works, make sure these services are running:</p>
+            
+            <div class="code-block">
+# Start the Dr. Nephro API server
+cd nephrology_agent
+python nephro_api.py
+
+# Or using uvicorn
+uvicorn nephro_api:app --host 0.0.0.0 --port 8002 --reload
+            </div>
+        </div>
+        
+        <div class="step">
+            <h3>🎯 Widget Features</h3>
+            <ul>
+                <li><strong>Floating Chat Button:</strong> Appears in bottom corner of your website</li>
+                <li><strong>Real-time Messaging:</strong> Instant responses from Dr. Nephro AI</li>
+                <li><strong>Responsive Design:</strong> Automatically adapts to mobile screens</li>
+                <li><strong>Notification Badge:</strong> Shows unread message count</li>
+                <li><strong>Easy Integration:</strong> Just 2 script tags to add to any website</li>
+                <li><strong>Customizable Styling:</strong> Modify CSS to match your brand</li>
+            </ul>
+        </div>
+        
+        <div class="step">
+            <h3>🔧 Troubleshooting</h3>
+            <ul>
+                <li><strong>Widget not appearing:</strong> Check browser console for JavaScript errors</li>
+                <li><strong>API connection failed:</strong> Verify the API server is running on correct port</li>
+                <li><strong>CORS errors:</strong> Configure your API server to allow your domain</li>
+                <li><strong>Mobile issues:</strong> Ensure viewport meta tag is present</li>
+            </ul>
+        </div>
+        
+        <div class="demo-section">
+            <h2>🚀 Ready to Get Started?</h2>
+            <p>Copy the code examples above and add them to your website. The widget will automatically appear and connect to your Dr. Nephro API server.</p>
+            <button class="btn" onclick="testWidget()">Test Widget Connection</button>
+        </div>
+    </div>
+    
+    <!-- Dr. Nephro Widget Integration (Live Demo) -->
+    <script src="nephro_widget.js"></script>
+    <script>
+        let widget;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize the widget
+            try {
+                widget = new NephroWidget({
+                    apiUrl: 'http://localhost:8002',
+                    position: 'bottom-right',
+                    theme: 'default'
+                });
+                
+                checkApiStatus();
+                console.log('Dr. Nephro widget initialized successfully!');
+            } catch (error) {
+                console.error('Failed to initialize widget:', error);
+                updateStatus(false, 'Widget Error');
+            }
+        });
+        
+        // Test widget function
+        function testWidget() {
+            if (widget) {
+                widget.open();
+                setTimeout(() => {
+                    widget.sendMessage('Hello! I want to test the widget functionality.');
+                }, 1000);
+            } else {
+                alert('Widget not initialized. Check console for errors.');
+            }
+        }
+        
+        // Check API status
+        async function checkApiStatus() {
+            try {
+                const response = await fetch('http://localhost:8002/health');
+                if (response.ok) {
+                    updateStatus(true, 'Dr. Nephro Online');
+                } else {
+                    updateStatus(false, 'API Offline');
+                }
+            } catch (error) {
+                updateStatus(false, 'API Offline');
+            }
+        }
+        
+        // Update status indicator
+        function updateStatus(isOnline, message) {
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            
+            if (isOnline) {
+                statusDot.classList.add('online');
+            } else {
+                statusDot.classList.remove('online');
+            }
+            
+            statusText.textContent = message;
+        }
+        
+        // Periodic status check
+        setInterval(checkApiStatus, 30000);
+    </script>
+</body>
+</html>

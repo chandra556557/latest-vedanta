@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dr. Nephro Iframe Integration Example</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            color: #333;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .integration-tabs {
+            display: flex;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+        
+        .tab-button {
+            flex: 1;
+            padding: 1rem 2rem;
+            background: white;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab-button.active {
+            background: #f8f9fa;
+            border-bottom-color: #667eea;
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .tab-button:hover {
+            background: #f8f9fa;
+        }
+        
+        .tab-content {
+            display: none;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .iframe-container {
+            position: relative;
+            width: 100%;
+            height: 600px;
+        }
+        
+        .iframe-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 10px;
+        }
+        
+        .responsive-iframe {
+            position: relative;
+            width: 100%;
+            height: 0;
+            padding-bottom: 75%; /* 4:3 Aspect Ratio */
+        }
+        
+        .responsive-iframe iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 10px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 900px;
+            height: 80%;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+        
+        .close-button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: background 0.3s ease;
+        }
+        
+        .close-button:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .modal-body {
+            height: calc(100% - 70px);
+        }
+        
+        .modal-body iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .demo-buttons {
+            display: flex;
+            gap: 1rem;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+        
+        .demo-button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .demo-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .info-card {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 5px;
+        }
+        
+        .info-card h4 {
+            color: #1976d2;
+            margin-bottom: 0.5rem;
+        }
+        
+        .info-card p {
+            color: #424242;
+            margin: 0;
+            line-height: 1.5;
+        }
+        
+        .status-bar {
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #dc3545;
+        }
+        
+        .status-dot.online {
+            background: #28a745;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .integration-tabs {
+                flex-direction: column;
+            }
+            
+            .iframe-container {
+                height: 500px;
+            }
+            
+            .modal-content {
+                width: 95%;
+                height: 90%;
+            }
+            
+            .demo-buttons {
+                flex-direction: column;
+            }
+            
+            .status-bar {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏥 Dr. Nephro Iframe Integration</h1>
+        <p>Seamlessly embed kidney health assistance into your website</p>
+    </div>
+    
+    <div class="container">
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-dot" id="embedStatus"></span>
+                <span>Embed Server: <span id="embedStatusText">Checking...</span></span>
+            </div>
+            <div class="status-item">
+                <span class="status-dot" id="apiStatus"></span>
+                <span>API Server: <span id="apiStatusText">Checking...</span></span>
+            </div>
+            <div class="status-item">
+                <button class="demo-button" onclick="checkAllServices()" style="padding: 0.5rem 1rem; font-size: 0.9rem;">🔄 Refresh Status</button>
+            </div>
+        </div>
+        
+        <div class="integration-tabs">
+            <button class="tab-button active" onclick="showTab('basic')">Basic Iframe</button>
+            <button class="tab-button" onclick="showTab('responsive')">Responsive</button>
+            <button class="tab-button" onclick="showTab('modal')">Modal Integration</button>
+        </div>
+        
+        <!-- Basic Iframe Tab -->
+        <div class="tab-content active" id="basic-tab">
+            <div class="info-card">
+                <h4>📋 Basic Iframe Integration</h4>
+                <p>Simple iframe embedding with fixed dimensions. Perfect for dedicated health consultation pages.</p>
+            </div>
+            
+            <div class="demo-buttons">
+                <button class="demo-button" onclick="loadBasicIframe()">🚀 Load Dr. Nephro</button>
+                <button class="demo-button" onclick="reloadIframe('basicIframe')">🔄 Reload</button>
+            </div>
+            
+            <div class="iframe-container">
+                <iframe id="basicIframe" 
+                        title="Dr. Nephro - Basic Integration"
+                        style="background: #f8f9fa; display: flex; align-items: center; justify-content: center;">
+                    <p style="text-align: center; color: #666; padding: 2rem;">Click "Load Dr. Nephro" to start the consultation interface</p>
+                </iframe>
+            </div>
+        </div>
+        
+        <!-- Responsive Iframe Tab -->
+        <div class="tab-content" id="responsive-tab">
+            <div class="info-card">
+                <h4>📱 Responsive Iframe Integration</h4>
+                <p>Responsive iframe that adapts to different screen sizes. Maintains aspect ratio and works great on mobile devices.</p>
+            </div>
+            
+            <div class="demo-buttons">
+                <button class="demo-button" onclick="loadResponsiveIframe()">🚀 Load Responsive Dr. Nephro</button>
+                <button class="demo-button" onclick="reloadIframe('responsiveIframe')">🔄 Reload</button>
+            </div>
+            
+            <div class="responsive-iframe">
+                <iframe id="responsiveIframe" 
+                        title="Dr. Nephro - Responsive Integration"
+                        style="background: #f8f9fa;">
+                </iframe>
+            </div>
+        </div>
+        
+        <!-- Modal Integration Tab -->
+        <div class="tab-content" id="modal-tab">
+            <div class="info-card">
+                <h4>🪟 Modal Integration</h4>
+                <p>Open Dr. Nephro in a modal overlay. Great for maintaining user context while providing health consultation.</p>
+            </div>
+            
+            <div class="demo-buttons">
+                <button class="demo-button" onclick="openModal()">🚀 Open Dr. Nephro Modal</button>
+                <button class="demo-button" onclick="openFullscreenModal()">🖥️ Open Fullscreen</button>
+            </div>
+            
+            <div style="text-align: center; padding: 3rem; background: white; border-radius: 10px; margin-top: 2rem;">
+                <h3 style="color: #667eea; margin-bottom: 1rem;">🏥 Your Healthcare Website Content</h3>
+                <p style="color: #666; margin-bottom: 2rem;">This represents your existing website content. The Dr. Nephro modal will overlay on top without disrupting the user experience.</p>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 2rem 0;">
+                    <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px;">
+                        <h4 style="color: #333;">🩺 Services</h4>
+                        <p style="color: #666; font-size: 0.9rem;">Medical consultations and health checkups</p>
+                    </div>
+                    <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px;">
+                        <h4 style="color: #333;">📅 Appointments</h4>
+                        <p style="color: #666; font-size: 0.9rem;">Schedule your next visit with our specialists</p>
+                    </div>
+                    <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px;">
+                        <h4 style="color: #333;">📊 Health Records</h4>
+                        <p style="color: #666; font-size: 0.9rem;">Access your medical history and test results</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal -->
+    <div class="modal" id="nephroModal">
+        <div class="modal-content" id="modalContent">
+            <div class="modal-header">
+                <h3>🩺 Dr. Nephro - Kidney Health Assistant</h3>
+                <button class="close-button" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <iframe id="modalIframe" 
+                        src="" 
+                        title="Dr. Nephro - Modal Integration">
+                </iframe>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Configuration
+        const EMBED_URL = 'http://localhost:8503';
+        const API_URL = 'http://localhost:8002';
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAllServices();
+        });
+        
+        // Tab switching
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all buttons
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+        }
+        
+        // Load basic iframe
+        function loadBasicIframe() {
+            const iframe = document.getElementById('basicIframe');
+            iframe.src = EMBED_URL;
+            iframe.style.background = 'white';
+        }
+        
+        // Load responsive iframe
+        function loadResponsiveIframe() {
+            const iframe = document.getElementById('responsiveIframe');
+            iframe.src = EMBED_URL;
+            iframe.style.background = 'white';
+        }
+        
+        // Reload iframe
+        function reloadIframe(iframeId) {
+            const iframe = document.getElementById(iframeId);
+            if (iframe.src) {
+                iframe.src = iframe.src;
+            }
+        }
+        
+        // Modal functions
+        function openModal() {
+            const modal = document.getElementById('nephroModal');
+            const modalContent = document.getElementById('modalContent');
+            const iframe = document.getElementById('modalIframe');
+            
+            // Reset modal size
+            modalContent.style.width = '90%';
+            modalContent.style.maxWidth = '900px';
+            modalContent.style.height = '80%';
+            
+            iframe.src = EMBED_URL;
+            modal.style.display = 'block';
+            
+            // Prevent body scroll
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function openFullscreenModal() {
+            const modal = document.getElementById('nephroModal');
+            const modalContent = document.getElementById('modalContent');
+            const iframe = document.getElementById('modalIframe');
+            
+            // Make modal fullscreen
+            modalContent.style.width = '100%';
+            modalContent.style.maxWidth = 'none';
+            modalContent.style.height = '100%';
+            modalContent.style.borderRadius = '0';
+            
+            iframe.src = EMBED_URL;
+            modal.style.display = 'block';
+            
+            // Prevent body scroll
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeModal() {
+            const modal = document.getElementById('nephroModal');
+            const modalContent = document.getElementById('modalContent');
+            const iframe = document.getElementById('modalIframe');
+            
+            modal.style.display = 'none';
+            iframe.src = '';
+            
+            // Reset modal styles
+            modalContent.style.borderRadius = '15px';
+            
+            // Restore body scroll
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Close modal when clicking outside
+        document.getElementById('nephroModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+        
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+        
+        // Service status checking
+        async function checkService(url, statusDotId, statusTextId, serviceName) {
+            const statusDot = document.getElementById(statusDotId);
+            const statusText = document.getElementById(statusTextId);
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    timeout: 5000
+                });
+                
+                if (response.ok) {
+                    statusDot.classList.add('online');
+                    statusText.textContent = 'Online';
+                    return true;
+                } else {
+                    throw new Error('Service unavailable');
+                }
+            } catch (error) {
+                statusDot.classList.remove('online');
+                statusText.textContent = 'Offline';
+                console.warn(`${serviceName} health check failed:`, error);
+                return false;
+            }
+        }
+        
+        async function checkAllServices() {
+            // Check embed server (Streamlit)
+            await checkService(EMBED_URL, 'embedStatus', 'embedStatusText', 'Embed Server');
+            
+            // Check API server
+            await checkService(API_URL + '/health', 'apiStatus', 'apiStatusText', 'API Server');
+        }
+        
+        // Periodic status check
+        setInterval(checkAllServices, 30000); // Check every 30 seconds
+        
+        // Handle iframe load errors
+        document.querySelectorAll('iframe').forEach(iframe => {
+            iframe.addEventListener('error', function() {
+                console.error('Failed to load iframe:', this.src);
+                this.style.background = '#f8f9fa';
+                this.srcdoc = `
+                    <div style="display: flex; align-items: center; justify-content: center; height: 100%; font-family: Arial, sans-serif; text-align: center; padding: 2rem; background: #f8f9fa;">
+                        <div>
+                            <h3 style="color: #dc3545; margin-bottom: 1rem;">⚠️ Service Unavailable</h3>
+                            <p style="color: #666; margin-bottom: 1rem;">Dr. Nephro embed server is not running.</p>
+                            <p style="color: #666; font-size: 0.9rem;">Please start the embed server with:<br><code>streamlit run nephro_embed.py --server.port 8503</code></p>
+                        </div>
+                    </div>
+                `;
+            });
+        });
+    </script>
+</body>
+</html>
