@@ -44,10 +44,10 @@ const About = () => {
           transition={{ duration: 0.8 }}
           className="text-center mb-16"
         >
-          <h2 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-amber-900 via-yellow-800 to-amber-900 bg-clip-text text-transparent mb-6" itemProp="name">
-            Welcome to Vedanta Hospitals
+          <h2 className="text-4xl lg:text-5xl font-bold mb-6" itemProp="name">
+            Welcome to <span className="text-gold" style={{color: '#C9A227'}}>Vedanta</span> <span className="text-goldDark" style={{color: '#A98500'}}>Hospitals</span>
           </h2>
-          <div className="w-24 h-1 bg-gradient-to-r from-amber-600 to-yellow-600 mx-auto mb-6 rounded-full"></div>
+          <div className="w-24 h-1 bg-gradient-to-r from-gold to-goldDark mx-auto mb-6 rounded-full"></div>
           <p className="text-xl text-gray-700 max-w-3xl mx-auto leading-relaxed" itemProp="description">
             A premier multi-specialty hospital providing comprehensive kidney care and advanced medical treatments 
             with a perfect blend of expertise, innovation, and compassionate care.

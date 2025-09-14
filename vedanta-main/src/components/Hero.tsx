@@ -196,11 +196,10 @@ const Hero = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2, duration: 0.8 }}
-                className="text-5xl lg:text-7xl font-bold text-white leading-tight drop-shadow-2xl"
+                className="text-4xl lg:text-5xl font-bold text-white leading-tight drop-shadow-2xl"
               >
-                Advanced{' '}
                 <span className="bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 bg-clip-text text-transparent">
-                  Multi-Specialty Healthcare Hospital
+                  Every Patient Matters, Every Recovery Inspires Us to Achieve the Impossible
                 </span>
               </motion.h1>
               <motion.p 
@@ -209,8 +208,7 @@ const Hero = () => {
                 transition={{ delay: 0.4, duration: 0.8 }}
                 className="text-xl text-white/90 leading-relaxed max-w-2xl drop-shadow-lg"
               >
-                Leading Multi-Specialty Healthcare Hospital in Guntur, Andhra Pradesh since 1995. Experience world-class healthcare services 
-                with state-of-the-art facilities, expert medical professionals, and comprehensive care.
+                Our deep medical expertise, advanced technology, and Modern Medical infrastructure transform complex diseases into stories of hope - making your healing journey our proudest achievement.
               </motion.p>
             </div>
 
@@ -220,90 +218,7 @@ const Hero = () => {
               transition={{ delay: 0.6, duration: 0.8 }}
               className="flex flex-col sm:flex-row gap-4 justify-center"
             >
-              <motion.button 
-                whileHover={{ 
-                  scale: 1.05,
-                  boxShadow: "0 20px 40px rgba(239, 68, 68, 0.4)",
-                  y: -2
-                }}
-                whileTap={{ scale: 0.95 }}
-                className="relative bg-gradient-to-r from-red-600 to-red-700 text-white px-8 py-4 rounded-xl hover:from-red-700 hover:to-red-800 transition-all duration-300 font-semibold flex items-center justify-center group shadow-2xl backdrop-blur-sm overflow-hidden"
-              >
-                {/* Animated pulse effect */}
-                <motion.div
-                  animate={{ 
-                    scale: [1, 1.5, 1],
-                    opacity: [0, 0.3, 0]
-                  }}
-                  transition={{ 
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                  className="absolute inset-0 bg-white/20 rounded-xl"
-                />
-                <motion.span
-                  animate={{ 
-                    rotate: [0, 5, 0]
-                  }}
-                  transition={{ 
-                    duration: 0.5,
-                    repeat: Infinity,
-                    repeatType: "reverse",
-                    ease: "easeInOut"
-                  }}
-                  className="mr-2"
-                >
-                  🫀
-                </motion.span>
-                Book Transplant Consultation
-                <motion.div
-                  animate={{ 
-                    x: [0, 3, 0]
-                  }}
-                  transition={{ 
-                    duration: 1,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                >
-                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                </motion.div>
-              </motion.button>
-              <motion.button 
-                whileHover={{ 
-                  scale: 1.05,
-                  boxShadow: "0 20px 40px rgba(217, 119, 6, 0.4)"
-                }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => {
-                  if (typeof (window as any).openAIAssistant === 'function') {
-                    (window as any).openAIAssistant();
-                  } else {
-                    // Fallback in case the assistant isn't loaded yet
-                    setTimeout(() => {
-                      if (typeof (window as any).openAIAssistant === 'function') {
-                        (window as any).openAIAssistant();
-                      }
-                    }, 500);
-                  }
-                }}
-                className="bg-gradient-to-r from-yellow-600 to-amber-600 text-white px-8 py-4 rounded-xl hover:from-yellow-700 hover:to-amber-700 transition-all duration-300 font-semibold flex items-center justify-center group shadow-2xl backdrop-blur-sm"
-              >
-                <Bot className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
-                AI Transplant Assistant
-              </motion.button>
-              <motion.button
-                whileHover={{ 
-                  scale: 1.05,
-                  boxShadow: "0 20px 40px rgba(217, 119, 6, 0.4)"
-                }}
-                whileTap={{ scale: 0.95 }}
-                className="bg-white/20 backdrop-blur-sm border border-white/30 text-white px-8 py-4 rounded-xl hover:bg-white/30 transition-all duration-300 font-semibold flex items-center justify-center group shadow-2xl"
-              >
-                <Play className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
-                Transplant Center Tour
-              </motion.button>
+
             </motion.div>
 
             {/* Stats */}
@@ -444,11 +359,11 @@ const Hero = () => {
                   }}
                   className="text-2xl font-bold text-white mb-2"
                 >
-                  🏥 Advanced Multi-Specialty Healthcare Hospital
+                  Multispeciality Hospital with precision and compassionate care
                 </motion.h3>
               </div>
               <p className="text-white/90 text-lg">
-                Living Donor Transplants • Deceased Donor Program • ABO Incompatible Transplants • Pre-transplant Evaluation • Post-transplant Care
+                Nephrology • Kidney Transplant • Urology • Critical Care • General Medicine • Orthopaedics and Joint Replacement • Paediatrics and Neonatology • Cardiology and Neurology
               </p>
             </motion.div>
           </motion.div>

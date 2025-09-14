@@ -29,14 +29,6 @@ const AIHealthDashboard = () => {
       trend: '-5%',
       status: 'good',
       color: 'text-purple-500'
-    },
-    {
-      icon: TrendingUp,
-      title: 'Fitness Score',
-      value: '85/100',
-      trend: '+8%',
-      status: 'excellent',
-      color: 'text-green-500'
     }
   ];
 

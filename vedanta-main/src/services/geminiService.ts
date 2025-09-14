@@ -1,141 +1,295 @@
-// Predefined responses for the Vedanta AI Assistant
-const RESPONSES = {
-  // Greetings
-  greeting: [
-    "Hello! I'm Vedanta's AI Assistant. How can I help you today?",
-    "Hi there! Welcome to Vedanta. How may I assist you?",
-    "Greetings! I'm here to help with any questions about Vedanta."
-  ],
-  
-  // Appointments
-  appointment: [
-    "I can help you book an appointment. Our available hours are Monday to Friday, 9 AM to 6 PM. When would you like to schedule?",
-    "To book an appointment, please provide your preferred date and time. We're available weekdays from 9 AM to 6 PM.",
-    "I'd be happy to assist with your appointment. Could you let me know your preferred day and time?"
-  ],
-  
-  // Doctor Information
-  doctor_info: [
-    "We have specialists in various fields. Could you tell me what kind of specialist you're looking for?",
-    "Our team includes experts in cardiology, neurology, and general medicine. Who would you like to see?",
-    "We can help you find the right specialist. Could you share what kind of medical assistance you need?"
-  ],
-  
-  // Services
-  services: [
-    "We offer a range of healthcare services including general check-ups, specialist consultations, and diagnostic tests.",
-    "Our services include primary care, specialty care, diagnostic imaging, and laboratory services.",
-    "We provide comprehensive healthcare services. Could you let me know what specific service you're interested in?"
-  ],
-  
-  // Location
-  location: [
-    "Our main clinic is located at 123 Healthcare Ave, Medical District, City. We're open Monday to Friday, 9 AM to 6 PM.",
-    "You can find us at 123 Healthcare Ave. We're in the Medical District, near City Hospital.",
-    "Our address is 123 Healthcare Ave, Medical District, City. Would you like directions?"
-  ],
-  
-  // Contact
-  contact: [
-    "You can reach us at (123) 456-7890 or email info@vedanta.com. Our team is available to assist you.",
-    "For general inquiries, call (123) 456-7890. For appointments, please use our online booking system.",
-    "Contact us at (123) 456-7890 during business hours or email support@vedanta.com anytime."
-  ],
-  
-  // Default fallback
-  default: [
-    "I'm not sure I understand. Could you please rephrase your question?",
-    "I want to make sure I help you correctly. Could you provide more details?",
-    "I'm here to help. Could you tell me more about what you're looking for?"
-  ]
+import { ChatResponse } from '../types/healtho';
+
+// Google Gemini API configuration
+const GEMINI_API_KEY = import.meta.env.VITE_GOOGLE_GEMINI_API_KEY;
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+
+// Enhanced debug logging
+console.log('🔍 Gemini Service Debug - Environment Variables Start 🔍');
+console.log('VITE_GOOGLE_GEMINI_API_KEY exists:', 'VITE_GOOGLE_GEMINI_API_KEY' in import.meta.env);
+console.log('All Vite env variables:', Object.keys(import.meta.env)
+  .filter(key => key.startsWith('VITE_'))
+  .reduce((obj, key) => ({
+    ...obj,
+    [key]: key.includes('KEY') ? '***REDACTED***' : import.meta.env[key]
+  }), {}));
+
+const debugInfo = {
+  rawKey: GEMINI_API_KEY ? '***REDACTED***' : 'NOT FOUND',
+  keyLength: GEMINI_API_KEY?.length || 0,
+  keyType: typeof GEMINI_API_KEY,
+  isConfigured: !!(GEMINI_API_KEY && GEMINI_API_KEY !== 'your_google_gemini_api_key_here'),
+  allEnvKeys: Object.keys(import.meta.env).filter(key => key.startsWith('VITE_'))
 };
 
-// Response patterns to match user queries
-const RESPONSE_PATTERNS = [
-  {
-    patterns: [/hello|hi|hey|greetings|good morning|good afternoon|good evening/i],
-    responseKey: 'greeting'
-  },
-  {
-    patterns: [/appointment|schedule|book a visit|make an appointment/i],
-    responseKey: 'appointment'
-  },
-  {
-    patterns: [/doctor|specialist|physician|cardiologist|neurologist|dermatologist/i],
-    responseKey: 'doctor_info'
-  },
-  {
-    patterns: [/services|what do you offer|treatments|procedures/i],
-    responseKey: 'services'
-  },
-  {
-    patterns: [/location|address|where are you|how to get there|directions/i],
-    responseKey: 'location'
-  },
-  {
-    patterns: [/contact|phone|email|call|reach|get in touch/i],
-    responseKey: 'contact'
-  }
-];
+console.log('🔍 Gemini Service Debug:', JSON.stringify(debugInfo, null, 2));
+console.log('🔍 Gemini Service Debug - Environment Variables End 🔍');
 
-// Helper function to get a random response from an array
-const getRandomResponse = (responses: string[]): string => {
-  return responses[Math.floor(Math.random() * responses.length)];
-};
+// Also try to send this info to server if possible
+if (typeof window !== 'undefined') {
+  (window as any).geminiDebugInfo = debugInfo;
+}
 
-// Helper function to find the best matching response
-const findBestMatch = (prompt: string): string => {
-  const lowerPrompt = prompt.toLowerCase();
+interface GeminiRequest {
+  contents: {
+    parts: {
+      text: string;
+    }[];
+  }[];
+  generationConfig?: {
+    temperature?: number;
+    topK?: number;
+    topP?: number;
+    maxOutputTokens?: number;
+  };
+}
+
+interface GeminiResponse {
+  candidates: {
+    content: {
+      parts: {
+        text: string;
+      }[];
+    };
+    finishReason: string;
+  }[];
+}
+
+/**
+ * Send a message to Google Gemini API directly from frontend
+ * @param message The user's message
+ * @returns The chatbot's response
+ */
+export const sendMessageToGemini = async (message: string): Promise<ChatResponse> => {
+  // Check if API key is configured
+  console.log('🔍 API Key Check:', {
+    hasKey: !!GEMINI_API_KEY,
+    keyValue: GEMINI_API_KEY,
+    keyLength: GEMINI_API_KEY?.length,
+    isPlaceholder: GEMINI_API_KEY === 'your_google_gemini_api_key_here'
+  });
   
-  // Check for direct matches first
-  for (const { patterns, responseKey } of RESPONSE_PATTERNS) {
-    if (patterns.some(pattern => pattern.test(lowerPrompt))) {
-      return getRandomResponse(RESPONSES[responseKey as keyof typeof RESPONSES] || RESPONSES.default);
-    }
+  if (!GEMINI_API_KEY || GEMINI_API_KEY === 'your_google_gemini_api_key_here') {
+    return {
+      response: `⚠️ Google Gemini API key is not configured. Debug: hasKey=${!!GEMINI_API_KEY}, keyLength=${GEMINI_API_KEY?.length || 0}, keyType=${typeof GEMINI_API_KEY}`,
+      is_question: false
+    };
   }
-  
-  // If no direct match, check for keywords
-  for (const { patterns, responseKey } of RESPONSE_PATTERNS) {
-    for (const pattern of patterns) {
-      if (lowerPrompt.includes(pattern.source.replace(/[^a-z0-9\s]/gi, '').trim())) {
-        return getRandomResponse(RESPONSES[responseKey as keyof typeof RESPONSES] || RESPONSES.default);
+
+  try {
+    // Prepare the request with medical context
+    const systemPrompt = `You are a helpful medical AI assistant for Vedanta Hospitals. You provide general health information and guidance, but always remind users to consult healthcare professionals for serious medical concerns. Keep responses concise, helpful, and professional. Focus on:
+    - General health tips and wellness advice
+    - Basic medical information and explanations
+    - Preventive care recommendations
+    - When to seek professional medical help
+    
+    Always include appropriate medical disclaimers when giving health advice.`;
+    
+    const requestBody: GeminiRequest = {
+      contents: [
+        {
+          parts: [
+            {
+              text: `${systemPrompt}\n\nUser question: ${message}`
+            }
+          ]
+        }
+      ],
+      generationConfig: {
+        temperature: 0.7,
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: 1024
+      }
+    };
+
+    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Gemini API error:', errorData);
+      
+      if (response.status === 400) {
+        return {
+          response: "I'm having trouble understanding your request. Could you please rephrase it?",
+          is_question: false
+        };
+      } else if (response.status === 403) {
+        return {
+          response: "⚠️ API access denied. Please check your Google Gemini API key and permissions.",
+          is_question: false
+        };
+      } else {
+        throw new Error(`API request failed with status ${response.status}`);
       }
     }
+
+    const data: GeminiResponse = await response.json();
+    
+    if (!data.candidates || data.candidates.length === 0) {
+      return {
+        response: "I'm sorry, I couldn't generate a response. Please try again with a different question.",
+        is_question: false
+      };
+    }
+
+    const generatedText = data.candidates[0].content.parts[0].text;
+    
+    // Add medical disclaimer if the response contains medical advice
+    const medicalKeywords = ['symptom', 'treatment', 'medicine', 'diagnosis', 'disease', 'condition', 'pain', 'health'];
+    const containsMedicalContent = medicalKeywords.some(keyword => 
+      generatedText.toLowerCase().includes(keyword) || message.toLowerCase().includes(keyword)
+    );
+    
+    let finalResponse = generatedText;
+    if (containsMedicalContent && !generatedText.toLowerCase().includes('consult')) {
+      finalResponse += "\n\n⚠️ *This information is for educational purposes only. Please consult with a healthcare professional for personalized medical advice.*";
+    }
+
+    return {
+      response: finalResponse,
+      is_question: false,
+      options: ['Ask another question', 'Get health tips', 'Contact Vedanta Hospitals']
+    };
+
+  } catch (error) {
+    console.error('Error calling Gemini API:', error);
+    return {
+      response: "I'm experiencing technical difficulties. Please try again later or contact our support team.",
+      is_question: false
+    };
   }
+};
+
+/**
+ * Check if Google Gemini API is properly configured
+ * @returns boolean indicating if API key is available
+ */
+export const isGeminiConfigured = (): boolean => {
+  return !!(GEMINI_API_KEY && GEMINI_API_KEY !== 'your_google_gemini_api_key_here');
+};
+
+/**
+ * Get configuration status for debugging
+ * @returns object with configuration details
+ */
+export const getGeminiConfig = () => {
+  return {
+    hasApiKey: !!GEMINI_API_KEY,
+    isConfigured: isGeminiConfigured(),
+    apiUrl: GEMINI_API_URL
+  };
+};
+
+/**
+ * Test the Google Gemini API connection
+ * @returns Promise with connection test results
+ */
+export const testGeminiConnection = async (): Promise<{success: boolean, message: string, error?: any}> => {
+  console.log('🔍 Testing Gemini Connection...');
+  console.log('🔑 API Key configured:', !!GEMINI_API_KEY);
+  console.log('🔗 API URL:', GEMINI_API_URL);
+  console.log('🌐 Environment check:', {
+    hasViteKey: !!import.meta.env.VITE_GOOGLE_GEMINI_API_KEY,
+    keyLength: GEMINI_API_KEY?.length || 0
+  });
   
-  // Return a default response if no match found
-  return getRandomResponse(RESPONSES.default);
+  if (!isGeminiConfigured()) {
+    console.error('❌ API key not configured');
+    return {
+      success: false,
+      message: "Google Gemini API key is not configured"
+    };
+  }
+
+  try {
+    const testRequest: GeminiRequest = {
+      contents: [
+        {
+          parts: [
+            {
+              text: "Hello, this is a connection test. Please respond with 'Connection successful'."
+            }
+          ]
+        }
+      ],
+      generationConfig: {
+        temperature: 0.1,
+        maxOutputTokens: 50
+      }
+    };
+
+    console.log('📤 Sending test request to:', `${GEMINI_API_URL}?key=${GEMINI_API_KEY?.substring(0, 10)}...`);
+    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(testRequest)
+    });
+    
+    console.log('📥 Response status:', response.status);
+    console.log('📥 Response headers:', Object.fromEntries(response.headers.entries()));
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => 'Unable to read error response');
+      console.error('❌ API Error Response:', errorText);
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+        console.error('❌ Parsed Error Data:', errorData);
+      } catch (e) {
+        console.error('❌ Could not parse error as JSON');
+        errorData = { rawError: errorText };
+      }
+      return {
+        success: false,
+        message: `API request failed with status ${response.status}: ${errorText.substring(0, 100)}`,
+        error: errorData
+      };
+    }
+
+    const data: GeminiResponse = await response.json();
+    console.log('✅ API Response received:', data);
+    
+    if (!data.candidates || data.candidates.length === 0) {
+      console.error('❌ No candidates in response');
+      return {
+        success: false,
+        message: "No response candidates received from API"
+      };
+    }
+
+    console.log('✅ Connection test successful!');
+    return {
+      success: true,
+      message: "Connection successful - Google Gemini API is working properly"
+    };
+
+  } catch (error) {
+    console.error('❌ Network or other error:', error);
+    return {
+      success: false,
+      message: `Network error or API unavailable: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      error: error
+    };
+  }
 };
 
-/**
- * Generate a response using predefined patterns
- * @param prompt The user's message
- * @param chatHistory Previous conversation history (not used in rule-based system)
- * @returns Generated response
- */
+// Legacy functions for backward compatibility
 export const generateResponse = async (prompt: string, chatHistory: Array<{role: 'user' | 'model', parts: string}>) => {
-  try {
-    // Find the best matching response based on the prompt
-    return findBestMatch(prompt);
-  } catch (error) {
-    console.error('Error generating response:', error);
-    return getRandomResponse(RESPONSES.default);
-  }
+  const response = await sendMessageToGemini(prompt);
+  return response.response;
 };
 
-/**
- * Generate a quick response for common queries
- * @param queryType Type of query (e.g., 'greeting', 'appointment', 'doctor_info')
- * @param context Additional context for the query (not used in rule-based system)
- * @returns Generated response
- */
 export const generateQuickResponse = async (queryType: string, context?: any) => {
-  try {
-    // Get a random response for the given query type
-    const responses = RESPONSES[queryType as keyof typeof RESPONSES] || RESPONSES.default;
-    return getRandomResponse(Array.isArray(responses) ? responses : [responses]);
-  } catch (error) {
-    console.error('Error generating quick response:', error);
-    return getRandomResponse(RESPONSES.default);
-  }
+  const response = await sendMessageToGemini(queryType);
+  return response.response;
 };

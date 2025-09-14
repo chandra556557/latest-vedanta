@@ -34,15 +34,6 @@ const AIFeatures = () => {
 
   const features = [
     {
-      icon: Bot,
-      title: 'AI Health Assistant',
-      description: 'Get instant answers to your health questions with our advanced AI chatbot',
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-      borderColor: 'border-blue-200',
-      stats: { active: '24/7', responses: '0.8s avg', model: 'Self-trained' }
-    },
-    {
       icon: Brain,
       title: 'Smart Symptom Checker',
       description: 'Self-trained AI model analyzes symptoms with 98.4% medical accuracy',
@@ -209,44 +200,7 @@ const AIFeatures = () => {
           </div>
 
           <div className="space-y-6">
-            {/* Interactive AI Demo */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl p-8 border border-purple-200"
-            >
-              <div className="text-center">
-                <div className="bg-gradient-to-r from-purple-600 to-indigo-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Sparkles className="h-8 w-8 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">VedantaAI Assistant</h3>
-                <p className="text-gray-600 mb-6">
-                  Experience our self-trained medical AI model, specifically developed for healthcare using 
-                  Vedanta's extensive medical database. Get expert medical guidance with 98.4% accuracy.
-                </p>
-                
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div className="bg-white rounded-lg p-4">
-                    <Brain className="h-6 w-6 text-purple-600 mx-auto mb-2" />
-                    <div className="text-sm font-medium text-gray-900">Self-Trained</div>
-                    <div className="text-xs text-gray-600">2.5M Records</div>
-                  </div>
-                  <div className="bg-white rounded-lg p-4">
-                    <Zap className="h-6 w-6 text-indigo-600 mx-auto mb-2" />
-                    <div className="text-sm font-medium text-gray-900">Medical Expert</div>
-                    <div className="text-xs text-gray-600">98.4% Accuracy</div>
-                  </div>
-                </div>
-                
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-8 py-3 rounded-lg hover:shadow-lg transition-all duration-300 font-semibold"
-                >
-                  Try VedantaAI Assistant
-                </motion.button>
-              </div>
-            </motion.div>
+
 
             {/* Live Activity Feed */}
             <motion.div 

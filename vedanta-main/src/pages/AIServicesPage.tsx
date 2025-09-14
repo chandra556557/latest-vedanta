@@ -9,16 +9,6 @@ const AIServicesPage = () => {
 
   const aiServices = [
     {
-      id: 'chatbot',
-      icon: Bot,
-      title: 'AI Health Assistant',
-      description: 'Get instant answers to your health questions with our advanced AI chatbot',
-      features: ['24/7 Availability', 'Multi-language Support', 'Symptom Analysis', 'Appointment Booking'],
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-      stats: { users: '50K+', accuracy: '96%', response: '1.2s' }
-    },
-    {
       id: 'symptom-checker',
       icon: Brain,
       title: 'Smart Symptom Checker',
@@ -33,7 +23,7 @@ const AIServicesPage = () => {
       icon: Activity,
       title: 'Health Dashboard',
       description: 'Personalized health monitoring and insights powered by AI',
-      features: ['Real-time Monitoring', 'Predictive Analytics', 'Health Trends', 'Custom Alerts'],
+      features: ['Health Trends', 'Custom Alerts'],
       color: 'text-emerald-600',
       bgColor: 'bg-emerald-50',
       stats: { patients: '25K+', insights: '1M+', accuracy: '92%' }

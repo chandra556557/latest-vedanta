@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Menu, X, Phone, Clock, MapPin, ChevronDown, Search } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
+import vedantaLogo from '../assets/images/vedanta-logo.jpg';
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -122,13 +123,13 @@ const Navigation = () => {
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
               <img 
-                src="/vedanta logo.jpg" 
+                src={vedantaLogo} 
                 alt="Vedanta Hospital Logo" 
                 className="h-12 w-12 mr-3 rounded-full object-cover shadow-md"
               />
               <div className="text-2xl font-bold mr-12">
-                <span className="text-goldDark">Vedanta</span>
-                <span className="text-goldDark ml-1">Hospitals</span>
+                <span className="text-gold" style={{color: '#C9A227'}}>Vedanta</span>
+                <span className="text-goldDark ml-1" style={{color: '#A98500'}}>Hospitals</span>
               </div>
             </Link>
 

@@ -1,5 +1,6 @@
 import React from 'react';
 import { MapPin, Phone, Mail, Clock, Heart, Facebook, Twitter, Instagram, Linkedin, Youtube } from 'lucide-react';
+import vedantaLogo from '../assets/images/vedanta-logo.jpg';
 
 const Footer = () => {
   const locations = [
@@ -24,7 +25,7 @@ const Footer = () => {
   return (
     <footer id="contact" className="bg-gray-900 text-white" itemScope itemType="https://schema.org/Hospital">
       {/* Emergency Banner */}
-      <div className="bg-gradient-to-r from-amber-600 to-yellow-600 py-3">
+      <div className="bg-gradient-to-r from-gold to-goldDark py-3">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-center space-x-4 text-center">
             <Phone className="h-5 w-5" />
@@ -40,13 +41,13 @@ const Footer = () => {
           <div className="lg:col-span-1">
             <a href="/" className="flex items-center mb-6">
               <img 
-                src="/images/vedanta-logo.jpg" 
+                src={vedantaLogo} 
                 alt="Vedanta Hospital Logo" 
                 className="h-12 w-12 mr-3 rounded-full object-cover shadow-md"
                 itemProp="logo"
               />
-              <div className="text-3xl font-bold bg-gradient-to-r from-amber-400 to-yellow-400 bg-clip-text text-transparent" itemProp="name">
-                Vedanta<span className="bg-gradient-to-r from-yellow-400 to-amber-400 bg-clip-text text-transparent">Hospitals</span>
+              <div className="text-3xl font-bold" itemProp="name">
+                <span className="text-gold" style={{color: '#C9A227'}}>Vedanta</span><span className="text-goldDark ml-1" style={{color: '#A98500'}}>Hospitals</span>
               </div>
             </a>
             <p className="text-gray-300 mb-6 leading-relaxed" itemProp="description">
@@ -56,19 +57,19 @@ const Footer = () => {
             
             {/* Social Media */}
             <div className="flex space-x-4">
-              <a href="#" className="bg-gray-800 p-3 rounded-full hover:bg-gradient-to-r hover:from-amber-600 hover:to-yellow-600 transition-all duration-300">
+              <a href="#" className="bg-gray-800 p-3 rounded-full hover:bg-gradient-to-r hover:from-gold hover:to-goldDark transition-all duration-300">
                 <Facebook className="h-5 w-5" />
               </a>
-              <a href="#" className="bg-gray-800 p-3 rounded-full hover:bg-gradient-to-r hover:from-amber-600 hover:to-yellow-600 transition-all duration-300">
+              <a href="#" className="bg-gray-800 p-3 rounded-full hover:bg-gradient-to-r hover:from-gold hover:to-goldDark transition-all duration-300">
                 <Twitter className="h-5 w-5" />
               </a>
-              <a href="#" className="bg-gray-800 p-3 rounded-full hover:bg-gradient-to-r hover:from-amber-600 hover:to-yellow-600 transition-all duration-300">
+              <a href="#" className="bg-gray-800 p-3 rounded-full hover:bg-gradient-to-r hover:from-gold hover:to-goldDark transition-all duration-300">
                 <Instagram className="h-5 w-5" />
               </a>
-              <a href="#" className="bg-gray-800 p-3 rounded-full hover:bg-gradient-to-r hover:from-amber-600 hover:to-yellow-600 transition-all duration-300">
+              <a href="#" className="bg-gray-800 p-3 rounded-full hover:bg-gradient-to-r hover:from-gold hover:to-goldDark transition-all duration-300">
                 <Linkedin className="h-5 w-5" />
               </a>
-              <a href="#" className="bg-gray-800 p-3 rounded-full hover:bg-gradient-to-r hover:from-amber-600 hover:to-yellow-600 transition-all duration-300">
+              <a href="#" className="bg-gray-800 p-3 rounded-full hover:bg-gradient-to-r hover:from-gold hover:to-goldDark transition-all duration-300">
                 <Youtube className="h-5 w-5" />
               </a>
             </div>
@@ -107,7 +108,7 @@ const Footer = () => {
             <h3 className="text-xl font-semibold mb-6">Contact Information</h3>
             <div className="space-y-4">
               <div className="flex items-start space-x-3">
-                <Clock className="h-5 w-5 text-amber-400 mt-1 flex-shrink-0" />
+                <Clock className="h-5 w-5 text-gold mt-1 flex-shrink-0" />
                 <div>
                   <div className="font-medium">Operating Hours</div>
                   <div className="text-gray-300 text-sm">24/7 Emergency Services</div>
@@ -115,14 +116,14 @@ const Footer = () => {
                 </div>
               </div>
               <div className="flex items-start space-x-3">
-                <Phone className="h-5 w-5 text-amber-400 mt-1 flex-shrink-0" />
+                <Phone className="h-5 w-5 text-gold mt-1 flex-shrink-0" />
                 <div>
                   <div className="font-medium">General Inquiry</div>
                   <div className="text-gray-300 text-sm">+91-XXX-XXX-XXXX</div>
                 </div>
               </div>
               <div className="flex items-start space-x-3">
-                <Mail className="h-5 w-5 text-amber-400 mt-1 flex-shrink-0" />
+                <Mail className="h-5 w-5 text-gold mt-1 flex-shrink-0" />
                 <div>
                   <div className="font-medium">Email Us</div>
                   <div className="text-gray-300 text-sm">info@vedantahospital.com</div>
@@ -134,11 +135,11 @@ const Footer = () => {
 
         {/* Locations */}
         <div className="border-t border-gray-800 mt-12 pt-12">
-          <h3 className="text-2xl font-semibold mb-8 text-center bg-gradient-to-r from-amber-400 to-yellow-400 bg-clip-text text-transparent">Our Locations</h3>
+          <h3 className="text-2xl font-semibold mb-8 text-center bg-gradient-to-r from-gold to-goldDark bg-clip-text text-transparent">Our Locations</h3>
           <div className="grid md:grid-cols-3 gap-8">
             {locations.map((location, index) => (
               <div key={index} className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 hover:from-gray-700 hover:to-gray-800 transition-all duration-300 shadow-lg">
-                <h4 className="text-lg font-semibold mb-4 text-amber-400">{location.city}</h4>
+                <h4 className="text-lg font-semibold mb-4 text-gold">{location.city}</h4>
                 <div className="space-y-3 text-sm">
                   <div className="flex items-start space-x-2">
                     <MapPin className="h-4 w-4 text-gray-400 mt-1 flex-shrink-0" />

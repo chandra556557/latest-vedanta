@@ -51,7 +51,7 @@ const articles = [
     },
     {
       title: 'The Science Behind HelloKidney.ai',
-      excerpt: 'An in-depth look at the cutting-edge AI algorithms and machine learning models that power HelloKidney.ai\'s predictive analytics for kidney disease progression.',
+      excerpt: 'An in-depth look at the advanced medical research and clinical studies that support HelloKidney.ai\'s approach to kidney disease management.',
       author: 'Medical Research',
       date: '2024-02-28',
       readTime: '7 min read',

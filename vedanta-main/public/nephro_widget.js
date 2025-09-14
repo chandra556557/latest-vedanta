@@ -1,19 +1,38 @@
 /**
- * Dr. Nephro Chatbot Widget
- * Embeddable JavaScript widget for website integration
+ * Vedanta Smart Assist Widget
+ * Advanced AI-powered healthcare assistant for website integration
  */
 
-class NephroWidget {
+class VedantaSmartAssist {
     constructor(options = {}) {
-        this.apiUrl = options.apiUrl || 'http://localhost:8002';
-        this.containerId = options.containerId || 'nephro-widget';
-        this.theme = options.theme || 'default';
+        // Use Gemini API directly instead of backend
+        this.geminiApiKey = options.geminiApiKey || this.getGeminiApiKey();
+        this.geminiApiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+        this.containerId = options.containerId || 'vedanta-widget';
+        this.theme = options.theme || 'vedanta';
         this.position = options.position || 'bottom-right';
         this.whatsappAware = options.whatsappAware || false;
         this.isOpen = false;
         this.messages = [];
+        this.isTyping = false;
         
         this.init();
+    }
+    
+    getGeminiApiKey() {
+        // Try to get API key from various sources
+        if (typeof window !== 'undefined') {
+            // From global config
+            if (window.VITE_GOOGLE_GEMINI_API_KEY) {
+                return window.VITE_GOOGLE_GEMINI_API_KEY;
+            }
+            // From meta tag
+            const metaTag = document.querySelector('meta[name="gemini-api-key"]');
+            if (metaTag) {
+                return metaTag.getAttribute('content');
+            }
+        }
+        return null;
     }
     
     init() {
@@ -25,39 +44,68 @@ class NephroWidget {
     createWidget() {
         // Create widget container
         const widgetContainer = document.createElement('div');
-        widgetContainer.id = 'nephro-widget-container';
+        widgetContainer.id = 'vedanta-widget-container';
         const whatsappClass = this.whatsappAware ? ' whatsapp-aware' : '';
-        widgetContainer.className = `nephro-widget ${this.position}${whatsappClass}`;
+        widgetContainer.className = `vedanta-widget ${this.position}${whatsappClass}`;
         
         widgetContainer.innerHTML = `
-            <div class="nephro-widget-toggle" id="nephro-toggle">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 1H5C3.89 1 3 1.89 3 3V21C3 22.11 3.89 23 5 23H19C20.11 23 21 22.11 21 21V9M19 9H14V4H5V21H19V9Z" fill="white"/>
-                </svg>
-                <span class="nephro-widget-badge" id="nephro-badge" style="display: none;">1</span>
+            <div class="vedanta-widget-toggle" id="vedanta-toggle">
+                <div class="vedanta-toggle-icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L13.09 8.26L22 9L13.09 9.74L12 16L10.91 9.74L2 9L10.91 8.26L12 2Z" fill="white"/>
+                        <circle cx="12" cy="12" r="3" fill="white" opacity="0.8"/>
+                    </svg>
+                </div>
+                <div class="vedanta-pulse-ring"></div>
+                <span class="vedanta-widget-badge" id="vedanta-badge" style="display: none;">1</span>
             </div>
             
-            <div class="nephro-widget-chat" id="nephro-chat" style="display: none;">
-                <div class="nephro-widget-header">
-                    <div class="nephro-header-content">
-                        <div class="nephro-avatar">🩺</div>
-                        <div class="nephro-header-text">
-                            <h4>Dr. Nephro</h4>
-                            <span>Kidney Health Assistant</span>
+            <div class="vedanta-widget-chat" id="vedanta-chat" style="display: none;">
+                <div class="vedanta-widget-header">
+                    <div class="vedanta-header-content">
+                        <div class="vedanta-avatar">
+                            <div class="vedanta-avatar-inner">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 2L13.09 8.26L22 9L13.09 9.74L12 16L10.91 9.74L2 9L10.91 8.26L12 2Z" fill="#C9A227"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="vedanta-header-text">
+                            <h4>Vedanta Smart Assist</h4>
+                            <span class="vedanta-status">🟢 Online • AI Healthcare Assistant</span>
                         </div>
                     </div>
-                    <button class="nephro-close-btn" id="nephro-close">×</button>
+                    <button class="vedanta-close-btn" id="vedanta-close">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M18 6L6 18M6 6L18 18" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </button>
                 </div>
                 
-                <div class="nephro-widget-messages" id="nephro-messages"></div>
-                
-                <div class="nephro-widget-input">
-                    <input type="text" id="nephro-input" placeholder="Ask about kidney health..." />
-                    <button id="nephro-send">Send</button>
+                <div class="vedanta-widget-messages" id="vedanta-messages">
+                    <div class="vedanta-quick-actions">
+                        <button class="vedanta-quick-btn" data-action="health-check">🏥 Health Checkup</button>
+                        <button class="vedanta-quick-btn" data-action="appointment">📅 Book Appointment</button>
+                        <button class="vedanta-quick-btn" data-action="emergency">🚨 Emergency</button>
+                    </div>
                 </div>
                 
-                <div class="nephro-widget-footer">
-                    <small>⚠️ For educational purposes only. Consult your doctor for medical advice.</small>
+                <div class="vedanta-widget-input">
+                    <div class="vedanta-input-container">
+                        <input type="text" id="vedanta-input" placeholder="Ask me anything about your health..." />
+                        <button id="vedanta-send" class="vedanta-send-btn">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="vedanta-widget-footer">
+                    <div class="vedanta-footer-content">
+                        <span class="vedanta-powered">Powered by Vedanta Hospitals</span>
+                        <small>⚠️ For informational purposes. Consult healthcare professionals for medical advice.</small>
+                    </div>
                 </div>
             </div>
         `;
@@ -72,291 +120,480 @@ class NephroWidget {
     
     addStyles() {
         const styles = `
-            .nephro-widget {
+            .vedanta-widget {
                 position: fixed;
                 z-index: 9999;
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
             }
             
-            .nephro-widget.bottom-right {
-                bottom: 20px;
-                right: 20px;
+            .vedanta-widget.bottom-right {
+                bottom: 24px;
+                right: 24px;
             }
             
-            .nephro-widget.bottom-right.whatsapp-aware {
-                bottom: 90px;
-                right: 20px;
+            .vedanta-widget.bottom-right.whatsapp-aware {
+                bottom: 100px;
+                right: 24px;
             }
             
-            .nephro-widget.bottom-left {
-                bottom: 20px;
-                left: 20px;
+            .vedanta-widget.bottom-left {
+                bottom: 24px;
+                left: 24px;
             }
             
-            .nephro-widget.bottom-left.whatsapp-aware {
-                bottom: 90px;
-                left: 20px;
+            .vedanta-widget.bottom-left.whatsapp-aware {
+                bottom: 100px;
+                left: 24px;
             }
             
-            /* Mobile responsive positioning */
-            @media (max-width: 768px) {
-                .nephro-widget.bottom-right.whatsapp-aware {
-                    bottom: 100px;
-                    right: 15px;
-                }
-                
-                .nephro-widget.bottom-left.whatsapp-aware {
-                    bottom: 100px;
-                    left: 15px;
-                }
-                
-                .nephro-widget-chat {
-                    width: 320px;
-                    height: 450px;
-                }
-            }
-            
-            @media (max-width: 480px) {
-                .nephro-widget.bottom-right.whatsapp-aware {
-                    bottom: 110px;
-                    right: 10px;
-                }
-                
-                .nephro-widget.bottom-left.whatsapp-aware {
-                    bottom: 110px;
-                    left: 10px;
-                }
-                
-                .nephro-widget-chat {
-                    width: 300px;
-                    height: 400px;
-                }
-            }
-            
-            .nephro-widget-toggle {
-                width: 60px;
-                height: 60px;
-                background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            .vedanta-widget-toggle {
+                width: 64px;
+                height: 64px;
+                background: linear-gradient(135deg, #C9A227 0%, #A98500 50%, #8B6F00 100%);
                 border-radius: 50%;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 cursor: pointer;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                transition: all 0.3s ease;
+                box-shadow: 0 8px 32px rgba(201, 162, 39, 0.3);
+                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
                 position: relative;
-            }
-            
-            .nephro-widget-toggle:hover {
-                transform: scale(1.1);
-                box-shadow: 0 6px 20px rgba(0,0,0,0.2);
-            }
-            
-            .nephro-widget-badge {
-                position: absolute;
-                top: -5px;
-                right: -5px;
-                background: #ff4757;
-                color: white;
-                border-radius: 50%;
-                width: 20px;
-                height: 20px;
-                font-size: 12px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-weight: bold;
-            }
-            
-            .nephro-widget-chat {
-                position: absolute;
-                bottom: 70px;
-                right: 0;
-                width: 350px;
-                height: 500px;
-                background: white;
-                border-radius: 12px;
-                box-shadow: 0 8px 30px rgba(0,0,0,0.12);
-                display: flex;
-                flex-direction: column;
                 overflow: hidden;
             }
             
-            .nephro-widget-header {
-                background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            .vedanta-widget-toggle::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+                transform: translateX(-100%);
+                transition: transform 0.6s;
+            }
+            
+            .vedanta-widget-toggle:hover::before {
+                transform: translateX(100%);
+            }
+            
+            .vedanta-widget-toggle:hover {
+                transform: scale(1.05) rotate(5deg);
+                box-shadow: 0 12px 40px rgba(201, 162, 39, 0.4);
+            }
+            
+            .vedanta-toggle-icon {
+                z-index: 2;
+                animation: vedanta-float 3s ease-in-out infinite;
+            }
+            
+            .vedanta-pulse-ring {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                border: 2px solid #C9A227;
+                border-radius: 50%;
+                animation: vedanta-pulse 2s infinite;
+                opacity: 0;
+            }
+            
+            @keyframes vedanta-float {
+                0%, 100% { transform: translateY(0px); }
+                50% { transform: translateY(-3px); }
+            }
+            
+            @keyframes vedanta-pulse {
+                0% {
+                    transform: scale(1);
+                    opacity: 0.8;
+                }
+                100% {
+                    transform: scale(1.4);
+                    opacity: 0;
+                }
+            }
+            
+            .vedanta-widget-badge {
+                position: absolute;
+                top: -8px;
+                right: -8px;
+                background: linear-gradient(135deg, #ff4757, #ff3742);
                 color: white;
-                padding: 15px;
+                border-radius: 50%;
+                width: 24px;
+                height: 24px;
+                font-size: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 600;
+                box-shadow: 0 4px 12px rgba(255, 71, 87, 0.4);
+                animation: vedanta-bounce 0.6s ease-in-out;
+            }
+            
+            @keyframes vedanta-bounce {
+                0%, 20%, 53%, 80%, 100% {
+                    transform: translate3d(0,0,0);
+                }
+                40%, 43% {
+                    transform: translate3d(0, -8px, 0);
+                }
+                70% {
+                    transform: translate3d(0, -4px, 0);
+                }
+                90% {
+                    transform: translate3d(0, -2px, 0);
+                }
+            }
+            
+            .vedanta-widget-chat {
+                position: absolute;
+                bottom: 80px;
+                right: 0;
+                width: 380px;
+                height: 580px;
+                background: white;
+                border-radius: 20px;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 8px 20px rgba(0,0,0,0.1);
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+                transform: scale(0.8) translateY(20px);
+                opacity: 0;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(201, 162, 39, 0.1);
+            }
+            
+            .vedanta-widget-chat[style*="flex"] {
+                transform: scale(1) translateY(0);
+                opacity: 1;
+            }
+            
+            .vedanta-widget-header {
+                background: linear-gradient(135deg, #C9A227 0%, #A98500 100%);
+                color: white;
+                padding: 20px;
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
+                position: relative;
+                overflow: hidden;
             }
             
-            .nephro-header-content {
+            .vedanta-widget-header::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="%23ffffff" opacity="0.05"/><circle cx="75" cy="75" r="1" fill="%23ffffff" opacity="0.05"/><circle cx="50" cy="10" r="0.5" fill="%23ffffff" opacity="0.03"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>') repeat;
+                opacity: 0.3;
+            }
+            
+            .vedanta-header-content {
                 display: flex;
                 align-items: center;
-                gap: 10px;
+                gap: 12px;
+                z-index: 1;
             }
             
-            .nephro-avatar {
-                font-size: 24px;
+            .vedanta-avatar {
+                width: 48px;
+                height: 48px;
+                background: rgba(255, 255, 255, 0.15);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                backdrop-filter: blur(10px);
+                border: 2px solid rgba(255, 255, 255, 0.2);
             }
             
-            .nephro-header-text h4 {
+            .vedanta-avatar-inner {
+                animation: vedanta-rotate 8s linear infinite;
+            }
+            
+            @keyframes vedanta-rotate {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+            
+            .vedanta-header-text h4 {
                 margin: 0;
-                font-size: 16px;
+                font-size: 18px;
+                font-weight: 600;
+                letter-spacing: -0.02em;
             }
             
-            .nephro-header-text span {
-                font-size: 12px;
+            .vedanta-status {
+                font-size: 13px;
                 opacity: 0.9;
+                font-weight: 500;
             }
             
-            .nephro-close-btn {
-                background: none;
+            .vedanta-close-btn {
+                background: rgba(255, 255, 255, 0.15);
                 border: none;
                 color: white;
-                font-size: 24px;
                 cursor: pointer;
-                padding: 0;
-                width: 30px;
-                height: 30px;
+                padding: 8px;
+                width: 32px;
+                height: 32px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 border-radius: 50%;
-                transition: background 0.2s;
+                transition: all 0.2s;
+                backdrop-filter: blur(10px);
+                z-index: 1;
             }
             
-            .nephro-close-btn:hover {
-                background: rgba(255,255,255,0.1);
+            .vedanta-close-btn:hover {
+                background: rgba(255, 255, 255, 0.25);
+                transform: scale(1.1);
             }
             
-            .nephro-widget-messages {
+            .vedanta-widget-messages {
                 flex: 1;
-                padding: 15px;
+                padding: 20px;
                 overflow-y: auto;
                 display: flex;
                 flex-direction: column;
-                gap: 10px;
+                gap: 16px;
+                background: linear-gradient(180deg, #fafafa 0%, #ffffff 100%);
             }
             
-            .nephro-message {
-                max-width: 80%;
-                padding: 10px 12px;
-                border-radius: 12px;
-                font-size: 14px;
-                line-height: 1.4;
-            }
-            
-            .nephro-message.user {
-                background: #007bff;
-                color: white;
-                align-self: flex-end;
-                border-bottom-right-radius: 4px;
-            }
-            
-            .nephro-message.assistant {
-                background: #f8f9fa;
-                color: #333;
-                align-self: flex-start;
-                border-bottom-left-radius: 4px;
-                border: 1px solid #e9ecef;
-            }
-            
-            .nephro-widget-input {
-                padding: 15px;
-                border-top: 1px solid #e9ecef;
+            .vedanta-quick-actions {
                 display: flex;
-                gap: 10px;
+                flex-wrap: wrap;
+                gap: 8px;
+                margin-bottom: 16px;
             }
             
-            .nephro-widget-input input {
-                flex: 1;
-                padding: 10px 12px;
-                border: 1px solid #ddd;
-                border-radius: 20px;
-                outline: none;
-                font-size: 14px;
-            }
-            
-            .nephro-widget-input input:focus {
-                border-color: #007bff;
-            }
-            
-            .nephro-widget-input button {
-                background: #007bff;
+            .vedanta-quick-btn {
+                background: linear-gradient(135deg, #C9A227, #A98500);
                 color: white;
                 border: none;
-                padding: 10px 16px;
+                padding: 8px 12px;
                 border-radius: 20px;
+                font-size: 12px;
+                font-weight: 500;
                 cursor: pointer;
+                transition: all 0.2s;
+                box-shadow: 0 2px 8px rgba(201, 162, 39, 0.2);
+            }
+            
+            .vedanta-quick-btn:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(201, 162, 39, 0.3);
+            }
+            
+            .vedanta-message {
+                max-width: 85%;
+                padding: 12px 16px;
+                border-radius: 18px;
                 font-size: 14px;
-                transition: background 0.2s;
+                line-height: 1.5;
+                position: relative;
+                animation: vedanta-message-in 0.3s ease-out;
             }
             
-            .nephro-widget-input button:hover {
-                background: #0056b3;
+            @keyframes vedanta-message-in {
+                from {
+                    opacity: 0;
+                    transform: translateY(10px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
             }
             
-            .nephro-widget-footer {
-                padding: 10px 15px;
+            .vedanta-message.user {
+                background: linear-gradient(135deg, #C9A227, #A98500);
+                color: white;
+                align-self: flex-end;
+                border-bottom-right-radius: 6px;
+                box-shadow: 0 4px 12px rgba(201, 162, 39, 0.2);
+            }
+            
+            .vedanta-message.assistant {
+                background: white;
+                color: #333;
+                align-self: flex-start;
+                border-bottom-left-radius: 6px;
+                border: 1px solid #e9ecef;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            }
+            
+            .vedanta-widget-input {
+                padding: 20px;
+                border-top: 1px solid #e9ecef;
+                background: white;
+            }
+            
+            .vedanta-input-container {
+                display: flex;
+                gap: 12px;
+                align-items: center;
+                background: #f8f9fa;
+                border-radius: 25px;
+                padding: 4px;
+                border: 2px solid transparent;
+                transition: all 0.2s;
+            }
+            
+            .vedanta-input-container:focus-within {
+                border-color: #C9A227;
+                box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.1);
+            }
+            
+            .vedanta-input-container input {
+                flex: 1;
+                padding: 12px 16px;
+                border: none;
+                background: transparent;
+                outline: none;
+                font-size: 14px;
+                color: #333;
+            }
+            
+            .vedanta-input-container input::placeholder {
+                color: #999;
+            }
+            
+            .vedanta-send-btn {
+                background: linear-gradient(135deg, #C9A227, #A98500);
+                color: white;
+                border: none;
+                padding: 10px;
+                border-radius: 50%;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.2s;
+                box-shadow: 0 2px 8px rgba(201, 162, 39, 0.2);
+            }
+            
+            .vedanta-send-btn:hover {
+                transform: scale(1.05);
+                box-shadow: 0 4px 12px rgba(201, 162, 39, 0.3);
+            }
+            
+            .vedanta-widget-footer {
+                padding: 16px 20px;
                 background: #f8f9fa;
                 border-top: 1px solid #e9ecef;
+            }
+            
+            .vedanta-footer-content {
                 text-align: center;
             }
             
-            .nephro-widget-footer small {
+            .vedanta-powered {
+                display: block;
+                font-size: 12px;
+                font-weight: 600;
+                color: #C9A227;
+                margin-bottom: 4px;
+            }
+            
+            .vedanta-footer-content small {
                 color: #666;
                 font-size: 11px;
+                line-height: 1.3;
             }
             
-            .nephro-typing {
+            .vedanta-typing {
                 display: flex;
                 align-items: center;
-                gap: 5px;
-                padding: 10px 12px;
-                background: #f8f9fa;
-                border-radius: 12px;
+                gap: 8px;
+                padding: 12px 16px;
+                background: white;
+                border-radius: 18px;
                 align-self: flex-start;
                 border: 1px solid #e9ecef;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+                animation: vedanta-message-in 0.3s ease-out;
             }
             
-            .nephro-typing-dots {
+            .vedanta-typing-text {
+                font-size: 14px;
+                color: #666;
+                font-style: italic;
+            }
+            
+            .vedanta-typing-dots {
                 display: flex;
-                gap: 3px;
+                gap: 4px;
             }
             
-            .nephro-typing-dot {
-                width: 6px;
-                height: 6px;
-                background: #666;
+            .vedanta-typing-dot {
+                width: 8px;
+                height: 8px;
+                background: #C9A227;
                 border-radius: 50%;
-                animation: nephro-typing 1.4s infinite;
+                animation: vedanta-typing 1.4s infinite;
             }
             
-            .nephro-typing-dot:nth-child(2) {
+            .vedanta-typing-dot:nth-child(2) {
                 animation-delay: 0.2s;
             }
             
-            .nephro-typing-dot:nth-child(3) {
+            .vedanta-typing-dot:nth-child(3) {
                 animation-delay: 0.4s;
             }
             
-            @keyframes nephro-typing {
+            @keyframes vedanta-typing {
                 0%, 60%, 100% {
                     transform: translateY(0);
                     opacity: 0.4;
                 }
                 30% {
-                    transform: translateY(-10px);
+                    transform: translateY(-8px);
                     opacity: 1;
                 }
             }
             
+            /* Mobile Responsive */
+            @media (max-width: 768px) {
+                .vedanta-widget.bottom-right.whatsapp-aware {
+                    bottom: 110px;
+                    right: 16px;
+                }
+                
+                .vedanta-widget.bottom-left.whatsapp-aware {
+                    bottom: 110px;
+                    left: 16px;
+                }
+                
+                .vedanta-widget-chat {
+                    width: 340px;
+                    height: 520px;
+                }
+            }
+            
             @media (max-width: 480px) {
-                .nephro-widget-chat {
-                    width: 300px;
-                    height: 400px;
+                .vedanta-widget.bottom-right,
+                .vedanta-widget.bottom-right.whatsapp-aware {
+                    bottom: 20px;
+                    right: 16px;
+                }
+                
+                .vedanta-widget.bottom-left,
+                .vedanta-widget.bottom-left.whatsapp-aware {
+                    bottom: 20px;
+                    left: 16px;
+                }
+                
+                .vedanta-widget-chat {
+                    width: calc(100vw - 32px);
+                    height: calc(100vh - 100px);
+                    max-width: 320px;
+                    max-height: 500px;
                 }
             }
         `;
@@ -367,10 +604,11 @@ class NephroWidget {
     }
     
     attachEventListeners() {
-        const toggle = document.getElementById('nephro-toggle');
-        const close = document.getElementById('nephro-close');
-        const input = document.getElementById('nephro-input');
-        const send = document.getElementById('nephro-send');
+        const toggle = document.getElementById('vedanta-toggle');
+        const close = document.getElementById('vedanta-close');
+        const input = document.getElementById('vedanta-input');
+        const send = document.getElementById('vedanta-send');
+        const quickBtns = document.querySelectorAll('.vedanta-quick-btn');
         
         toggle.addEventListener('click', () => this.toggleWidget());
         close.addEventListener('click', () => this.closeWidget());
@@ -380,11 +618,32 @@ class NephroWidget {
                 this.sendMessage();
             }
         });
+        
+        // Quick action buttons
+        quickBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const action = e.target.dataset.action;
+                this.handleQuickAction(action);
+            });
+        });
+    }
+    
+    handleQuickAction(action) {
+        const actions = {
+            'health-check': 'I would like to know about health checkup packages and services.',
+            'appointment': 'I want to book an appointment with a doctor.',
+            'emergency': 'This is an emergency. I need immediate medical assistance.'
+        };
+        
+        if (actions[action]) {
+            document.getElementById('vedanta-input').value = actions[action];
+            this.sendMessage();
+        }
     }
     
     toggleWidget() {
-        const chat = document.getElementById('nephro-chat');
-        const badge = document.getElementById('nephro-badge');
+        const chat = document.getElementById('vedanta-chat');
+        const badge = document.getElementById('vedanta-badge');
         
         if (this.isOpen) {
             chat.style.display = 'none';
@@ -393,25 +652,25 @@ class NephroWidget {
             chat.style.display = 'flex';
             this.isOpen = true;
             badge.style.display = 'none';
-            document.getElementById('nephro-input').focus();
+            document.getElementById('vedanta-input').focus();
         }
     }
     
     closeWidget() {
-        document.getElementById('nephro-chat').style.display = 'none';
+        document.getElementById('vedanta-chat').style.display = 'none';
         this.isOpen = false;
     }
     
     addWelcomeMessage() {
-        const welcomeMsg = "👋 Hello! I'm Dr. Nephro, your AI kidney health assistant. I can help with questions about kidney health, CKD, dialysis, and more. How can I assist you today?";
+        const welcomeMsg = "👋 Hello! I'm Vedanta Smart Assist, your intelligent healthcare companion. I can help you with health information, appointment booking, emergency assistance, and connecting you with our medical experts. How can I assist you today?";
         this.addMessage('assistant', welcomeMsg);
         this.showBadge();
     }
     
     addMessage(role, content) {
-        const messagesContainer = document.getElementById('nephro-messages');
+        const messagesContainer = document.getElementById('vedanta-messages');
         const messageDiv = document.createElement('div');
-        messageDiv.className = `nephro-message ${role}`;
+        messageDiv.className = `vedanta-message ${role}`;
         messageDiv.textContent = content;
         
         messagesContainer.appendChild(messageDiv);
@@ -421,38 +680,42 @@ class NephroWidget {
     }
     
     showTyping() {
-        const messagesContainer = document.getElementById('nephro-messages');
+        if (this.isTyping) return;
+        
+        const messagesContainer = document.getElementById('vedanta-messages');
         const typingDiv = document.createElement('div');
-        typingDiv.className = 'nephro-typing';
-        typingDiv.id = 'nephro-typing-indicator';
+        typingDiv.className = 'vedanta-typing';
+        typingDiv.id = 'vedanta-typing-indicator';
         typingDiv.innerHTML = `
-            <span>Dr. Nephro is typing</span>
-            <div class="nephro-typing-dots">
-                <div class="nephro-typing-dot"></div>
-                <div class="nephro-typing-dot"></div>
-                <div class="nephro-typing-dot"></div>
+            <span class="vedanta-typing-text">Vedanta Smart Assist is thinking</span>
+            <div class="vedanta-typing-dots">
+                <div class="vedanta-typing-dot"></div>
+                <div class="vedanta-typing-dot"></div>
+                <div class="vedanta-typing-dot"></div>
             </div>
         `;
         
         messagesContainer.appendChild(typingDiv);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        this.isTyping = true;
     }
     
     hideTyping() {
-        const typingIndicator = document.getElementById('nephro-typing-indicator');
+        const typingIndicator = document.getElementById('vedanta-typing-indicator');
         if (typingIndicator) {
             typingIndicator.remove();
+            this.isTyping = false;
         }
     }
     
     showBadge() {
         if (!this.isOpen) {
-            document.getElementById('nephro-badge').style.display = 'flex';
+            document.getElementById('vedanta-badge').style.display = 'flex';
         }
     }
     
     async sendMessage() {
-        const input = document.getElementById('nephro-input');
+        const input = document.getElementById('vedanta-input');
         const message = input.value.trim();
         
         if (!message) return;
@@ -465,41 +728,119 @@ class NephroWidget {
         this.showTyping();
         
         try {
-            // Send to API
-            const response = await fetch(`${this.apiUrl}/chat`, {
+            // Check if API key is configured
+            if (!this.geminiApiKey || this.geminiApiKey === 'your_google_gemini_api_key_here') {
+                this.hideTyping();
+                this.addMessage('assistant', '⚠️ Google Gemini API key is not configured. Please add your API key to use the chatbot.');
+                return;
+            }
+            
+            // Prepare the request with medical context
+            const systemPrompt = `You are a helpful medical AI assistant for Vedanta Hospitals. You provide general health information and guidance, but always remind users to consult healthcare professionals for serious medical concerns. Keep responses concise, helpful, and professional. Focus on:
+            - General health tips and wellness advice
+            - Basic medical information and explanations
+            - Preventive care recommendations
+            - When to seek professional medical help
+            
+            Always include appropriate medical disclaimers when giving health advice.`;
+            
+            const requestBody = {
+                contents: [{
+                    parts: [{
+                        text: `${systemPrompt}\n\nUser question: ${message}`
+                    }]
+                }],
+                generationConfig: {
+                    temperature: 0.7,
+                    topK: 40,
+                    topP: 0.95,
+                    maxOutputTokens: 1024
+                }
+            };
+            
+            // Send to Gemini API
+            const response = await fetch(`${this.geminiApiUrl}?key=${this.geminiApiKey}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    message: message,
-                    conversation_history: this.messages.slice(-10) // Last 10 messages for context
-                })
+                body: JSON.stringify(requestBody)
             });
-            
-            const data = await response.json();
             
             // Hide typing indicator
             this.hideTyping();
             
             if (response.ok) {
-                this.addMessage('assistant', data.response);
+                const data = await response.json();
+                
+                if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+                    const aiResponse = data.candidates[0].content.parts[0].text;
+                    this.addMessage('assistant', aiResponse);
+                } else {
+                    this.addMessage('assistant', 'I apologize, but I received an unexpected response. Please try rephrasing your question.');
+                }
             } else {
-                this.addMessage('assistant', 'I apologize, but I\'m having trouble processing your request. Please try again later.');
+                const errorData = await response.json().catch(() => ({}));
+                let errorMessage = 'I apologize, but I\'m experiencing some technical difficulties.';
+                
+                if (response.status === 403) {
+                    errorMessage = 'API access is restricted. Please check your API key permissions.';
+                } else if (response.status === 429) {
+                    errorMessage = 'I\'m receiving too many requests right now. Please wait a moment and try again.';
+                } else if (response.status === 400) {
+                    errorMessage = 'There was an issue with your request. Please try rephrasing your question.';
+                }
+                
+                this.addMessage('assistant', errorMessage);
             }
         } catch (error) {
             this.hideTyping();
-            this.addMessage('assistant', 'I\'m currently unable to connect to my knowledge base. Please check your internet connection and try again.');
+            console.error('Gemini API error:', error);
+            
+            let errorMessage = 'I\'m currently unable to connect to my knowledge base.';
+            if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                errorMessage += ' Please check your internet connection and try again.';
+            } else {
+                errorMessage += ' Please try again in a moment.';
+            }
+            errorMessage += ' For urgent matters, contact Vedanta Hospitals directly.';
+            
+            this.addMessage('assistant', errorMessage);
+        }
+    }
+    
+    // Public methods for external control
+    open() {
+        if (!this.isOpen) {
+            this.toggleWidget();
+        }
+    }
+    
+    close() {
+        if (this.isOpen) {
+            this.closeWidget();
+        }
+    }
+    
+    sendPredefinedMessage(message) {
+        if (this.isOpen) {
+            document.getElementById('vedanta-input').value = message;
+            this.sendMessage();
         }
     }
 }
 
 // Auto-initialize if configuration is provided
 if (typeof window !== 'undefined') {
-    window.NephroWidget = NephroWidget;
+    window.VedantaSmartAssist = VedantaSmartAssist;
+    
+    // Backward compatibility
+    window.NephroWidget = VedantaSmartAssist;
     
     // Auto-initialize if config is found
-    if (window.nephroWidgetConfig) {
-        new NephroWidget(window.nephroWidgetConfig);
+    if (window.vedantaWidgetConfig) {
+        new VedantaSmartAssist(window.vedantaWidgetConfig);
+    } else if (window.nephroWidgetConfig) {
+        new VedantaSmartAssist(window.nephroWidgetConfig);
     }
 }

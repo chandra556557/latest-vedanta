@@ -1,5 +1,4 @@
 import Hero from '../components/Hero';
-import AIFeatures from '../components/AIFeatures';
 import Services from '../components/Services';
 import About from '../components/About';
 import Doctors from '../components/Doctors';
@@ -10,7 +9,6 @@ const HomePage = () => {
   return (
     <div>
       <Hero />
-      <AIFeatures />
       <About />
       <Services />
       <Doctors />

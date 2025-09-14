@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, X, MessageCircle } from 'lucide-react';
 import { useChat } from '../contexts/ChatContext';
-import { sendMessage, getHealthTip } from '../services/healthoService';
+import { sendMessageToGemini, isGeminiConfigured, testGeminiConnection } from '../services/geminiService';
+import { getHealthTip } from '../services/healthoService';
 
 interface Message {
   id: number;
@@ -15,15 +16,40 @@ interface Message {
 
 const Chatbot = () => {
   const { isChatOpen, openChat, closeChat } = useChat();
-  const [messages, setMessages] = useState<Message[]>([
-    { 
-      id: 1, 
-      text: "Namaste! I'm your Vedanta AI Assistant. Ask me for health tips or any questions about Vedanta philosophy.", 
-      sender: 'bot' 
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Initialize with welcome message and API status
+  useEffect(() => {
+    if (messages.length === 0) {
+      const initializeChat = async () => {
+        let welcomeText = "Hello! I'm Vedanta's AI Assistant. ";
+        
+        if (isGeminiConfigured()) {
+          // Test connection on startup
+          const connectionTest = await testGeminiConnection();
+          if (connectionTest.success) {
+            welcomeText += "I'm powered by Google Gemini and ready to help with your health questions. How can I assist you today?";
+          } else {
+            welcomeText += "I'm currently unable to connect to my knowledge base. Please check your internet connection and try again, or contact Vedanta Hospitals directly for urgent matters.";
+          }
+        } else {
+          welcomeText += "Note: My advanced features are currently unavailable. I can still provide basic health tips. How can I help you today?";
+        }
+        
+        const welcomeMessage: Message = {
+          id: Date.now(),
+          text: welcomeText,
+          sender: 'bot',
+          options: ['Ask about health', 'Get health tips', 'Book appointment', 'Contact info']
+        };
+        setMessages([welcomeMessage]);
+      };
+      
+      initializeChat();
+    }
+  }, []);
 
   // Core flow for sending a user message (used by submit and quick-reply buttons)
   const sendUserMessage = async (text: string) => {
@@ -71,8 +97,8 @@ const Chatbot = () => {
           botMessage
         ]);
       } else {
-        // Default: call backend
-        const response = await sendMessage(trimmed);
+        // Use Google Gemini API for other queries
+        const response = await sendMessageToGemini(trimmed);
         const botMessage: Message = {
           id: Date.now() + 2,
           text: response.response,
@@ -86,10 +112,29 @@ const Chatbot = () => {
       }
     } catch (error) {
       console.error('Error getting response:', error);
+      
+      // Provide more specific error messages
+      let errorText = 'Sorry, I encountered an error. ';
+      
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        errorText = "I'm currently unable to connect to my knowledge base. Please check your internet connection and try again, or contact Vedanta Hospitals directly for urgent matters.";
+      } else if (error instanceof Error) {
+        if (error.message.includes('403') || error.message.includes('401')) {
+          errorText += 'There seems to be an authentication issue. Please contact support.';
+        } else if (error.message.includes('429')) {
+          errorText += 'I\'m receiving too many requests right now. Please wait a moment and try again.';
+        } else {
+          errorText += 'Please try again in a moment.';
+        }
+      } else {
+        errorText += 'Please try again or contact Vedanta Hospitals for assistance.';
+      }
+      
       const errorMessage: Message = {
         id: Date.now() + 2,
-        text: 'Sorry, I encountered an error. Please try again.',
-        sender: 'bot'
+        text: errorText,
+        sender: 'bot',
+        options: ['Try again', 'Get health tips', 'Contact Vedanta']
       };
       setMessages(prev => [
         ...prev.filter(msg => !msg.isTyping),

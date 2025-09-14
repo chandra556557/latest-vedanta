@@ -16,10 +16,12 @@ import AIHealthDashboard from './components/AIHealthDashboard';
 import AISymptomChecker from './components/AISymptomChecker';
 import PatientLoginPage from './pages/PatientLoginPage';
 import BlogPage from './pages/BlogPage';
-import SmartAIAssistant from './components/SmartAIAssistant';
-import FitnessAssistantPage from './pages/FitnessAssistantPage';
-import FitnessAssistantWidget from './components/FitnessAssistantWidget';
+import EnvTest from './components/EnvTest';
+
+
 import WhatsAppFloatButton from './components/WhatsAppFloatButton';
+import GeminiTest from './components/GeminiTest';
+import DirectApiTest from './components/DirectApiTest';
 
 function App() {
   return (
@@ -28,6 +30,8 @@ function App() {
         <meta itemProp="url" content="https://vedantahospitals.in" />
         <meta itemProp="name" content="Vedanta Hospital - Best Multi-Specialty Hospital in Guntur" />
         <Navigation />
+        <GeminiTest />
+        <DirectApiTest />
         <main role="main">
           <Routes>
           <Route path="/" element={<HomePage />} />
@@ -37,13 +41,13 @@ function App() {
           <Route path="/doctors" element={<DoctorsPage />} />
           <Route path="/packages" element={<PackagesPage />} />
           <Route path="/ai-services" element={<AIServicesPage />} />
-          <Route path="/ai-services/chatbot" element={<AIServicesPage />} />
+
           <Route path="/ai-services/symptom-checker" element={<AISymptomChecker />} />
-          <Route path="/ai-services/dashboard" element={<AIHealthDashboard />} />
-          <Route path="/ai-services/fitness-assistant" element={<FitnessAssistantPage />} />
-          <Route path="/testimonials" element={<Testimonials />} />
+          <Route path="/ai-dashboard" element={<AIHealthDashboard />} />
+          <Route path="/ai-symptom-checker" element={<AISymptomChecker />} />
+          <Route path="/patient-login" element={<PatientLoginPage />} />
           <Route path="/blog" element={<BlogPage />} />
-          <Route path="/news" element={<News />} />
+          <Route path="/env-test" element={<EnvTest />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/appointment" element={<AppointmentPage />} />
           <Route path="/doctor/:doctorName" element={<DoctorProfilePage />} />
@@ -54,9 +58,8 @@ function App() {
         </Routes>
         </main>
         <Footer />
-        <SmartAIAssistant />
-        {/* Floating Vedanta Fitness Assistant */}
-        <FitnessAssistantWidget />
+
+
         <WhatsAppFloatButton />
       </div>
     </Router>

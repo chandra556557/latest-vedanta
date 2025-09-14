@@ -66,7 +66,7 @@
       "name": "Vedanta Hospital",
       "alternateName": "Vedanta Hospitals Guntur",
       "url": "https://vedantahospitals.in",
-      "logo": "https://vedantahospitals.in/logo.png",
+      "logo": "/vedanta logo.jpg",
       "image": "https://vedantahospitals.in/hospital-image.jpg",
       "description": "Leading multi-specialty hospital in Guntur, Andhra Pradesh providing comprehensive healthcare services since 1995. NABH accredited with 24/7 emergency care.",
       "address": {
@@ -141,23 +141,13 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     
-    <!-- Dr. Nephro Widget Integration -->
+    <!-- Vedanta Smart Assist Widget Integration (Frontend-Only) -->
     <script src="/nephro_widget.js"></script>
+    <script src="/widget-config.js"></script>
     <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        // Initialize Dr. Nephro Widget
-        try {
-          new NephroWidget({
-            apiUrl: 'http://localhost:8002',
-            position: 'bottom-right',
-            theme: 'default',
-            whatsappAware: true
-          });
-          console.log('Dr. Nephro widget initialized successfully!');
-        } catch (error) {
-          console.error('Failed to initialize Dr. Nephro widget:', error);
-        }
-      });
-    </script>
+        // Environment variables will be injected by Vite during build
+        // For development, you can set the API key directly here or use .env file
+        console.log('Vedanta Smart Assist widget scripts loaded');
+      </script>
   </body>
 </html>

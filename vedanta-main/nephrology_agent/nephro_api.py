@@ -1,12 +1,13 @@
 import os
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from typing import List, Dict, Optional
+from pydantic import BaseModel, Field
+from typing import List, Dict, Optional, Literal
 import google.generativeai as genai
 from dotenv import load_dotenv
 import json
 from datetime import datetime
+from llama_service import LlamaService
 
 # Load environment variables
 load_dotenv()
@@ -25,6 +26,7 @@ class ChatMessage(BaseModel):
 class ChatRequest(BaseModel):
     message: str
     conversation_history: Optional[List[ChatMessage]] = []
+    model_config: Optional[ModelConfig] = Field(default_factory=ModelConfig)
 
 class ChatResponse(BaseModel):
     response: str
@@ -181,8 +183,14 @@ class NephrologyAIAgent:
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error generating education content: {str(e)}")
 
-# Initialize the AI agent
+# Initialize the AI agents
 nephro_agent = NephrologyAIAgent()
+llama_service = LlamaService()
+
+class ModelConfig(BaseModel):
+    model_type: Literal['gemini', 'llama'] = Field(default='gemini', description="The AI model to use for responses")
+    temperature: float = Field(default=0.7, ge=0.0, le=1.0, description="Controls randomness in the response generation")
+    max_tokens: Optional[int] = Field(default=1000, ge=1, le=4000, description="Maximum number of tokens to generate")
 
 # API Endpoints
 @app.get("/")
@@ -201,19 +209,46 @@ async def health_check():
         "api_key_configured": GEMINI_API_KEY != "your-api-key-here"
     }
 
-@app.post("/chat", response_model=ChatResponse)
-async def chat_with_nephro_agent(request: ChatRequest):
-    """Chat with the nephrology AI agent"""
+@app.post("/api/chat", response_model=ChatResponse)
+async def chat_with_ai_agent(request: ChatRequest):
+    """Chat with the AI agent using either Gemini or Llama"""
     try:
-        response_text = nephro_agent.generate_response(
-            request.message, 
-            request.conversation_history
-        )
+        config = request.model_config or ModelConfig()
         
-        return ChatResponse(
-            response=response_text,
-            timestamp=datetime.now().isoformat()
-        )
+        if config.model_type == 'llama':
+            # Convert conversation history to Llama format
+            messages = [
+                {"role": "system", "content": nephro_agent.nephrology_context}
+            ]
+            
+            for msg in request.conversation_history:
+                messages.append({
+                    "role": msg.role,
+                    "content": msg.content
+                })
+                
+            # Add the current message
+            messages.append({"role": "user", "content": request.message})
+            
+            # Call Llama service
+            response = llama_service.generate_response(
+                request.message,
+                conversation_history=messages[:-1],  # Exclude the current message
+                temperature=config.temperature,
+                max_tokens=config.max_tokens
+            )
+        else:
+            # Default to Gemini
+            response = nephro_agent.generate_response(
+                message=request.message,
+                conversation_history=[msg.dict() for msg in request.conversation_history]
+            )
+            
+        return {
+            "response": response,
+            "timestamp": datetime.utcnow().isoformat(),
+            "model_used": config.model_type
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
