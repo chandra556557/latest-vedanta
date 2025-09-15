@@ -5,9 +5,8 @@
 
 class VedantaSmartAssist {
     constructor(options = {}) {
-        // Use Gemini API directly instead of backend
-        this.geminiApiKey = options.geminiApiKey || this.getGeminiApiKey();
-        this.geminiApiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+        // Use backend API with Llama 3.2 or Gemini fallback
+        this.apiUrl = options.apiUrl || 'http://localhost:8002';
         this.containerId = options.containerId || 'vedanta-widget';
         this.theme = options.theme || 'vedanta';
         this.position = options.position || 'bottom-right';
@@ -19,21 +18,7 @@ class VedantaSmartAssist {
         this.init();
     }
     
-    getGeminiApiKey() {
-        // Try to get API key from various sources
-        if (typeof window !== 'undefined') {
-            // From global config
-            if (window.VITE_GOOGLE_GEMINI_API_KEY) {
-                return window.VITE_GOOGLE_GEMINI_API_KEY;
-            }
-            // From meta tag
-            const metaTag = document.querySelector('meta[name="gemini-api-key"]');
-            if (metaTag) {
-                return metaTag.getAttribute('content');
-            }
-        }
-        return null;
-    }
+
     
     init() {
         this.createWidget();
@@ -728,38 +713,17 @@ class VedantaSmartAssist {
         this.showTyping();
         
         try {
-            // Check if API key is configured
-            if (!this.geminiApiKey || this.geminiApiKey === 'your_google_gemini_api_key_here') {
-                this.hideTyping();
-                this.addMessage('assistant', '⚠️ Google Gemini API key is not configured. Please add your API key to use the chatbot.');
-                return;
-            }
-            
-            // Prepare the request with medical context
-            const systemPrompt = `You are a helpful medical AI assistant for Vedanta Hospitals. You provide general health information and guidance, but always remind users to consult healthcare professionals for serious medical concerns. Keep responses concise, helpful, and professional. Focus on:
-            - General health tips and wellness advice
-            - Basic medical information and explanations
-            - Preventive care recommendations
-            - When to seek professional medical help
-            
-            Always include appropriate medical disclaimers when giving health advice.`;
-            
+            // Prepare the request for backend API
             const requestBody = {
-                contents: [{
-                    parts: [{
-                        text: `${systemPrompt}\n\nUser question: ${message}`
-                    }]
-                }],
-                generationConfig: {
-                    temperature: 0.7,
-                    topK: 40,
-                    topP: 0.95,
-                    maxOutputTokens: 1024
-                }
+                message: message,
+                conversation_history: this.messages.slice(-10).map(msg => ({
+                    role: msg.role === 'assistant' ? 'assistant' : 'user',
+                    content: msg.content
+                }))
             };
             
-            // Send to Gemini API
-            const response = await fetch(`${this.geminiApiUrl}?key=${this.geminiApiKey}`, {
+            // Send to backend API
+            const response = await fetch(`${this.apiUrl}/api/chat`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -773,9 +737,13 @@ class VedantaSmartAssist {
             if (response.ok) {
                 const data = await response.json();
                 
-                if (data.candidates && data.candidates[0] && data.candidates[0].content) {
-                    const aiResponse = data.candidates[0].content.parts[0].text;
-                    this.addMessage('assistant', aiResponse);
+                if (data.response) {
+                    this.addMessage('assistant', data.response);
+                    
+                    // Show model information in console for debugging
+                    if (data.model_used) {
+                        console.log(`Response generated using: ${data.model_used}`);
+                    }
                 } else {
                     this.addMessage('assistant', 'I apologize, but I received an unexpected response. Please try rephrasing your question.');
                 }
@@ -783,8 +751,8 @@ class VedantaSmartAssist {
                 const errorData = await response.json().catch(() => ({}));
                 let errorMessage = 'I apologize, but I\'m experiencing some technical difficulties.';
                 
-                if (response.status === 403) {
-                    errorMessage = 'API access is restricted. Please check your API key permissions.';
+                if (response.status === 500) {
+                    errorMessage = errorData.detail || 'The AI service is currently unavailable. Please try again later.';
                 } else if (response.status === 429) {
                     errorMessage = 'I\'m receiving too many requests right now. Please wait a moment and try again.';
                 } else if (response.status === 400) {
@@ -795,11 +763,11 @@ class VedantaSmartAssist {
             }
         } catch (error) {
             this.hideTyping();
-            console.error('Gemini API error:', error);
+            console.error('Backend API error:', error);
             
-            let errorMessage = 'I\'m currently unable to connect to my knowledge base.';
+            let errorMessage = 'I\'m currently unable to connect to the AI service.';
             if (error.name === 'TypeError' && error.message.includes('fetch')) {
-                errorMessage += ' Please check your internet connection and try again.';
+                errorMessage += ' Please check that the backend server is running and try again.';
             } else {
                 errorMessage += ' Please try again in a moment.';
             }

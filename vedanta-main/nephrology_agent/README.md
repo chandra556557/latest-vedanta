@@ -1,6 +1,6 @@
 # Nephrology AI Agent
 
-A specialized AI-powered assistant for nephrology and kidney health, built with Google Gemini LLM integration.
+A specialized AI-powered assistant for nephrology and kidney health, supporting both Llama 3.2 and Google Gemini LLM integration.
 
 ## Features
 
@@ -9,7 +9,8 @@ A specialized AI-powered assistant for nephrology and kidney health, built with 
 - **Symptom Assessment**: AI-powered evaluation of kidney-related symptoms
 - **Educational Content**: Comprehensive information on nephrology topics
 - **Multiple Interfaces**: Both Streamlit web app and FastAPI backend
-- **Google Gemini Integration**: Powered by advanced AI language model
+- **Dual AI Model Support**: Choose between Llama 3.2 (primary) or Google Gemini (fallback)
+- **Flexible Configuration**: Easy switching between AI models via environment variables
 
 ## Quick Start
 
@@ -20,19 +21,31 @@ cd nephrology_agent
 pip install -r requirements.txt
 ```
 
-### 2. Configure API Key
+### 2. Configure AI Model
 
 1. Copy the environment file:
    ```bash
    copy .env.example .env
    ```
 
-2. Get your Google Gemini API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
+2. Choose your AI model by editing the `.env` file:
 
-3. Edit `.env` file and replace `your-google-gemini-api-key-here` with your actual API key:
-   ```
-   GEMINI_API_KEY=your-actual-api-key-here
-   ```
+#### Option A: Llama 3.2 (Primary - Recommended)
+```env
+AI_MODEL_TYPE=llama
+LLAMA_API_URL=http://localhost:8000
+LLAMA_API_KEY=your-llama-api-key-here
+```
+
+#### Option B: Google Gemini (Fallback)
+```env
+AI_MODEL_TYPE=gemini
+GEMINI_API_KEY=your-google-gemini-api-key-here
+```
+
+3. Get your API keys:
+   - **Llama 3.2**: Configure your local Llama server or get API access
+   - **Google Gemini**: Get your API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
 
 ### 3. Run the Application
 

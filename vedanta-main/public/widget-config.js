@@ -1,51 +1,51 @@
 /**
  * Widget Configuration Script
- * This script helps configure the Vedanta Smart Assist widget with environment variables
+ * This script helps configure the Vedanta Smart Assist widget with backend API
  */
 
-// Function to get Gemini API key from multiple sources
-function getGeminiApiKey() {
-  // Try multiple sources for the API key
+// Function to get backend API URL from multiple sources
+function getBackendApiUrl() {
+  // Try multiple sources for the API URL
   return (
-    // From global window object (set by Vite during build)
-    window.VITE_GOOGLE_GEMINI_API_KEY ||
+    // From global window object
+    window.VEDANTA_API_URL ||
     // From meta tag
-    document.querySelector('meta[name="gemini-api-key"]')?.content ||
+    document.querySelector('meta[name="vedanta-api-url"]')?.content ||
     // From script data attribute
-    document.querySelector('script[data-vite-google-gemini-api-key]')?.dataset.viteGoogleGeminiApiKey ||
+    document.querySelector('script[data-vedanta-api-url]')?.dataset.vedantaApiUrl ||
     // From localStorage (for development)
-    localStorage.getItem('VITE_GOOGLE_GEMINI_API_KEY') ||
-    // Fallback placeholder
-    'your_google_gemini_api_key_here'
+    localStorage.getItem('VEDANTA_API_URL') ||
+    // Default backend URL
+    'http://localhost:8002'
   );
 }
 
 // Initialize widget configuration
 function initializeVedantaWidget() {
-  const geminiApiKey = getGeminiApiKey();
+  const apiUrl = getBackendApiUrl();
   
-  // Make API key available globally for the widget
+  // Make API URL available globally for the widget
   if (typeof window !== 'undefined') {
-    window.VITE_GOOGLE_GEMINI_API_KEY = geminiApiKey;
+    window.VEDANTA_API_URL = apiUrl;
   }
   
   // Initialize the widget
   if (typeof VedantaSmartAssist !== 'undefined') {
     new VedantaSmartAssist({
-      geminiApiKey: geminiApiKey,
+      apiUrl: apiUrl,
       position: 'bottom-right',
       theme: 'default',
       whatsappAware: true
     });
-    console.log('Vedanta Smart Assist widget initialized with frontend-only mode!');
+    console.log('Vedanta Smart Assist widget initialized with Llama 3.2 backend!');
   } else if (typeof NephroWidget !== 'undefined') {
     new NephroWidget({
-      geminiApiKey: geminiApiKey,
+      apiUrl: apiUrl,
       position: 'bottom-right',
       theme: 'default',
       whatsappAware: true
     });
-    console.log('Nephro widget initialized with frontend-only mode!');
+    console.log('Nephro widget initialized with Llama 3.2 backend!');
   } else {
     console.error('Widget class not found. Make sure nephro_widget.js is loaded first.');
   }

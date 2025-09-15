@@ -1,32 +1,43 @@
 import React from 'react';
-import { Bot, Brain, Activity, Sparkles, MessageCircle, TrendingUp, Users, Clock } from 'lucide-react';
+import { Brain, Activity, MessageSquare, Clock, Sparkles, TrendingUp, Users, MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import AISymptomChecker from '../components/AISymptomChecker';
+import AIChat from '../components/AIChat';
 
 const AIServicesPage = () => {
-  const [activeTab, setActiveTab] = React.useState('overview');
+  const [activeTab] = React.useState('chat-assistant');
 
   const aiServices = [
     {
-      id: 'symptom-checker',
-      icon: Brain,
-      title: 'Smart Symptom Checker',
-      description: 'AI-powered symptom analysis to help identify potential health concerns',
-      features: ['500+ Conditions', '94.7% Accuracy', 'Instant Results', 'Specialist Recommendations'],
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
-      stats: { checks: '100K+', conditions: '500+', accuracy: '94.7%' }
+      id: 'chat-assistant',
+      icon: MessageSquare,
+      title: 'AI Health Assistant',
+      description: 'Chat with our AI assistant for kidney health information and advice',
+      features: ['24/7 Availability', 'Expert Knowledge', 'Personalized Responses'],
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50',
+      stats: { users: '50K+', questions: '1M+', satisfaction: '95%' }
     },
     {
-      id: 'dashboard',
+      id: 'symptom-checker',
+      icon: Brain,
+      title: 'Symptom Checker',
+      description: 'AI-powered symptom analysis for kidney-related concerns',
+      features: ['Quick Assessment', 'Condition Information', 'Next Steps'],
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-50',
+      stats: { accuracy: '92%', users: '100K+', conditions: '50+' }
+    },
+    {
+      id: 'health-insights',
       icon: Activity,
-      title: 'Health Dashboard',
-      description: 'Personalized health monitoring and insights powered by AI',
-      features: ['Health Trends', 'Custom Alerts'],
+      title: 'Health Insights',
+      description: 'Personalized health monitoring and recommendations',
+      features: ['Trend Analysis', 'Wellness Tips', 'Progress Tracking'],
       color: 'text-emerald-600',
       bgColor: 'bg-emerald-50',
-      stats: { patients: '25K+', insights: '1M+', accuracy: '92%' }
+      stats: { users: '25K+', insights: '1M+', accuracy: '90%' }
     }
   ];
 
@@ -182,7 +193,12 @@ const AIServicesPage = () => {
       <section className="py-20 bg-gray-50">
         <div className="container mx-auto px-4">
           <h2 className="text-4xl font-bold text-gray-900 text-center mb-16">Try Our AI Symptom Checker</h2>
-          <AISymptomChecker />
+          {activeTab === 'symptom-checker' && <AISymptomChecker />}
+          {activeTab === 'chat-assistant' && (
+            <div className="mt-8">
+              <AIChat />
+            </div>
+          )}
         </div>
       </section>
 

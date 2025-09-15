@@ -16,12 +16,7 @@ import AIHealthDashboard from './components/AIHealthDashboard';
 import AISymptomChecker from './components/AISymptomChecker';
 import PatientLoginPage from './pages/PatientLoginPage';
 import BlogPage from './pages/BlogPage';
-import EnvTest from './components/EnvTest';
-
-
 import WhatsAppFloatButton from './components/WhatsAppFloatButton';
-import GeminiTest from './components/GeminiTest';
-import DirectApiTest from './components/DirectApiTest';
 
 function App() {
   return (
@@ -30,8 +25,6 @@ function App() {
         <meta itemProp="url" content="https://vedantahospitals.in" />
         <meta itemProp="name" content="Vedanta Hospital - Best Multi-Specialty Hospital in Guntur" />
         <Navigation />
-        <GeminiTest />
-        <DirectApiTest />
         <main role="main">
           <Routes>
           <Route path="/" element={<HomePage />} />
@@ -47,7 +40,6 @@ function App() {
           <Route path="/ai-symptom-checker" element={<AISymptomChecker />} />
           <Route path="/patient-login" element={<PatientLoginPage />} />
           <Route path="/blog" element={<BlogPage />} />
-          <Route path="/env-test" element={<EnvTest />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/appointment" element={<AppointmentPage />} />
           <Route path="/doctor/:doctorName" element={<DoctorProfilePage />} />

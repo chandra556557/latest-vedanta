@@ -106,6 +106,9 @@
         <h3>✨ Basic Integration:</h3>
         <pre><code>&lt;script src="nephro_widget.js"&gt;&lt;/script&gt;</code></pre>
         
+        <!-- Meta tag for API URL (alternative method) -->
+        <meta name="vedanta-api-url" content="http://localhost:8002">
+        
         <h3>⚙️ Advanced Integration with Configuration:</h3>
         <pre><code>&lt;script&gt;
     // Configure Vedanta Smart Assist before loading
@@ -176,6 +179,17 @@ widget.sendPredefinedMessage('I need help with booking an appointment');</code><
     
     <!-- Widget Integration -->
     <script>
+        // Method 1: Set API URL via global variable
+        window.VEDANTA_API_URL = 'http://localhost:8002';
+        
+        // Method 2: Initialize widget directly with API URL
+        // new VedantaSmartAssist({
+        //     apiUrl: 'http://localhost:8002',
+        //     position: 'bottom-right',
+        //     theme: 'default',
+        //     whatsappAware: true
+        // });
+        
         // Configure Vedanta Smart Assist
         window.vedantaWidgetConfig = {
             apiUrl: 'http://localhost:8002',

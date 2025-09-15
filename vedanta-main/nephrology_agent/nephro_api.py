@@ -1,23 +1,70 @@
 import os
-from fastapi import FastAPI, HTTPException, Depends
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
-from typing import List, Dict, Optional, Literal
-import google.generativeai as genai
-from dotenv import load_dotenv
+import time
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
+from typing import List, Dict, Optional, Any, Literal
+from fastapi import FastAPI, HTTPException, Request, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field
+from dotenv import load_dotenv
+import aiohttp
 from llama_service import LlamaService
+
+# Simple in-memory cache
+cache_store = {}
 
 # Load environment variables
 load_dotenv()
 
-# Configure Gemini API
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "your-api-key-here")
-if GEMINI_API_KEY and GEMINI_API_KEY != "your-api-key-here":
-    genai.configure(api_key=GEMINI_API_KEY)
+# AI Model Configuration
+AI_MODEL_TYPE = os.getenv('AI_MODEL_TYPE', 'llama').lower()
+LLAMA_API_URL = os.getenv('LLAMA_API_URL', 'http://localhost:8000')
+LLAMA_API_KEY = os.getenv('LLAMA_API_KEY')
+
+# Initialize Gemini (fallback)
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+genai = None
+if GOOGLE_API_KEY or GEMINI_API_KEY:
+    import google.generativeai as genai
+    genai.configure(api_key=GOOGLE_API_KEY or GEMINI_API_KEY)
+
+# Initialize FastAPI
+app = FastAPI(
+    title="Nephrology AI Agent API",
+    description="Specialized AI assistant for nephrology and kidney health",
+    version="1.0.0",
+    docs_url="/docs",
+    redoc_url=None,
+    openapi_url="/openapi.json"
+)
+
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Load environment variables
+load_dotenv()
+
+# Configure AI Model based on environment
+print(f"AI Model Type: {AI_MODEL_TYPE}")
+if AI_MODEL_TYPE == 'llama':
+    print(f"Llama API URL: {LLAMA_API_URL}")
+else:
+    print("Using Gemini API as fallback")
 
 # Pydantic models
+class ModelConfig(BaseModel):
+    model_type: str = AI_MODEL_TYPE
+    temperature: float = 0.7
+    max_tokens: Optional[int] = 1000
+
 class ChatMessage(BaseModel):
     role: str
     content: str
@@ -26,7 +73,7 @@ class ChatMessage(BaseModel):
 class ChatRequest(BaseModel):
     message: str
     conversation_history: Optional[List[ChatMessage]] = []
-    model_config: Optional[ModelConfig] = Field(default_factory=ModelConfig)
+    ai_model_config: Optional[ModelConfig] = None
 
 class ChatResponse(BaseModel):
     response: str
@@ -52,25 +99,66 @@ class EducationResponse(BaseModel):
     content: str
     related_topics: List[str]
 
-# FastAPI app
-app = FastAPI(
-    title="Nephrology AI Agent API",
-    description="Specialized AI assistant for nephrology and kidney health",
-    version="1.0.0"
-)
+# Simple in-memory storage for development
 
-# CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# FastAPI app with optimized settings
+# Models
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+    timestamp: Optional[str] = None
+
+# Duplicate ModelConfig removed - using the one defined earlier
+
+class ChatRequest(BaseModel):
+    message: str
+    conversation_history: List[ChatMessage] = []
+    ai_model_config: Optional[ModelConfig] = None
+
+class ChatResponse(BaseModel):
+    response: str
+    timestamp: str
+    model_used: str
+
+class SymptomAssessmentRequest(BaseModel):
+    symptoms: List[str]
+    medical_history: Dict[str, bool]
+    age: Optional[int] = None
+    gender: Optional[str] = None
+
+class AssessmentResponse(BaseModel):
+    assessment: str
+    risk_level: str
+    recommendations: List[str]
+    urgent_care_needed: bool
+
+class KidneyEducationRequest(BaseModel):
+    topic: str
+
+class EducationResponse(BaseModel):
+    content: str
+    related_topics: List[str]
+
+# Add request timeout middleware
+@app.middleware("http")
+async def timeout_middleware(request: Request, call_next):
+    try:
+        start_time = time.time()
+        response = await call_next(request)
+        process_time = time.time() - start_time
+        response.headers["X-Process-Time"] = str(process_time)
+        return response
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+            content={"detail": "Request timeout"}
+        )
 
 class NephrologyAIAgent:
     def __init__(self):
-        self.model = genai.GenerativeModel('gemini-1.5-flash')
+        self.ai_model_type = AI_MODEL_TYPE
+        if genai:
+            self.model = genai.GenerativeModel('gemini-1.5-flash')
         self.nephrology_context = """
         You are Dr. Nephro, a specialized AI assistant for nephrology and kidney health.
         You have extensive knowledge about:
@@ -96,20 +184,41 @@ class NephrologyAIAgent:
         Provide structured, helpful responses that are easy to understand.
         """
     
-    def generate_response(self, message: str, conversation_history: List[ChatMessage] = None) -> str:
+    async def generate_response(self, message: str, conversation_history: List[ChatMessage] = None) -> str:
         try:
-            # Build conversation context
-            context = self.nephrology_context + "\n\n"
-            
-            if conversation_history:
-                context += "Previous conversation:\n"
-                for msg in conversation_history[-5:]:  # Last 5 messages for context
-                    context += f"{msg.role}: {msg.content}\n"
-            
-            context += f"\nCurrent question: {message}\n\nProvide a comprehensive, helpful response:"
-            
-            response = self.model.generate_content(context)
-            return response.text
+            if self.ai_model_type == 'llama':
+                # Use Llama service
+                conversation_msgs = []
+                if conversation_history:
+                    for msg in conversation_history[-5:]:  # Last 5 messages for context
+                        conversation_msgs.append({
+                            "role": msg.role,
+                            "content": msg.content
+                        })
+                
+                # Use the global llama_service instance with async method
+                response = await llama_service.generate_response_async(
+                    prompt=message,
+                    conversation_history=conversation_msgs
+                )
+                return response
+            else:
+                # Use Gemini as fallback
+                if not hasattr(self, 'model') or not self.model:
+                    raise HTTPException(status_code=500, detail="Gemini model not initialized")
+                
+                # Build conversation context
+                context = self.nephrology_context + "\n\n"
+                
+                if conversation_history:
+                    context += "Previous conversation:\n"
+                    for msg in conversation_history[-5:]:  # Last 5 messages for context
+                        context += f"{msg.role}: {msg.content}\n"
+                
+                context += f"\nCurrent question: {message}\n\nProvide a comprehensive, helpful response:"
+                
+                response = self.model.generate_content(context)
+                return response.text
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error generating response: {str(e)}")
     
@@ -172,6 +281,11 @@ class NephrologyAIAgent:
             
             try:
                 result = json.loads(response.text)
+                # Cache the response
+                cache_store[topic] = {
+                    'response': response.text,
+                    'timestamp': time.time()
+                }
             except:
                 # Fallback structure
                 result = {
@@ -187,10 +301,7 @@ class NephrologyAIAgent:
 nephro_agent = NephrologyAIAgent()
 llama_service = LlamaService()
 
-class ModelConfig(BaseModel):
-    model_type: Literal['gemini', 'llama'] = Field(default='gemini', description="The AI model to use for responses")
-    temperature: float = Field(default=0.7, ge=0.0, le=1.0, description="Controls randomness in the response generation")
-    max_tokens: Optional[int] = Field(default=1000, ge=1, le=4000, description="Maximum number of tokens to generate")
+# ModelConfig already defined earlier in the file
 
 # API Endpoints
 @app.get("/")
@@ -209,48 +320,74 @@ async def health_check():
         "api_key_configured": GEMINI_API_KEY != "your-api-key-here"
     }
 
+# Cache key builder for chat responses
+def chat_cache_key(
+    request: Request,
+    body: bytes,
+    *,
+    prefix: str = "fastapi-cache"
+) -> str:
+    from hashlib import md5
+    from fastapi import Request
+    
+    # Create a unique key based on request data
+    body_hash = md5(body).hexdigest()
+    return f"{prefix}:{request.url.path}:{body_hash}"
+
+# Health check endpoint
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "timestamp": datetime.utcnow().isoformat()}
+
+# Chat endpoint
 @app.post("/api/chat", response_model=ChatResponse)
-async def chat_with_ai_agent(request: ChatRequest):
-    """Chat with the AI agent using either Gemini or Llama"""
+async def chat_with_ai_agent(chat_request: ChatRequest):
+    """Chat with the AI agent using configured model (Llama 3.2 or Gemini)"""
     try:
-        config = request.model_config or ModelConfig()
-        
-        if config.model_type == 'llama':
-            # Convert conversation history to Llama format
-            messages = [
-                {"role": "system", "content": nephro_agent.nephrology_context}
-            ]
-            
-            for msg in request.conversation_history:
-                messages.append({
-                    "role": msg.role,
-                    "content": msg.content
-                })
-                
-            # Add the current message
-            messages.append({"role": "user", "content": request.message})
-            
-            # Call Llama service
-            response = llama_service.generate_response(
-                request.message,
-                conversation_history=messages[:-1],  # Exclude the current message
-                temperature=config.temperature,
-                max_tokens=config.max_tokens
-            )
+        # Check if required API keys are configured based on model type
+        if AI_MODEL_TYPE == 'llama':
+            if not LLAMA_API_KEY:
+                raise HTTPException(status_code=500, detail="Llama API key not configured")
         else:
-            # Default to Gemini
-            response = nephro_agent.generate_response(
-                message=request.message,
-                conversation_history=[msg.dict() for msg in request.conversation_history]
-            )
+            if not (GOOGLE_API_KEY or GEMINI_API_KEY):
+                raise HTTPException(status_code=500, detail="Google/Gemini API key not configured")
             
-        return {
-            "response": response,
-            "timestamp": datetime.utcnow().isoformat(),
-            "model_used": config.model_type
+        config = chat_request.ai_model_config or ModelConfig()
+        prompt = chat_request.message
+        cache_key = f"chat_{hash(prompt)}_{AI_MODEL_TYPE}"
+        
+        # Simple cache check (5 minute cache)
+        if cache_key in cache_store:
+            cached = cache_store[cache_key]
+            if (datetime.utcnow() - cached['timestamp']).total_seconds() < 300:
+                return cached['response']
+        
+        # Use the nephro_agent to generate response
+        response_text = await nephro_agent.generate_response(
+            message=prompt,
+            conversation_history=chat_request.conversation_history
+        )
+        
+        # Create response object
+        response = ChatResponse(
+            response=response_text,
+            timestamp=datetime.utcnow().isoformat(),
+            model_used=f"llama-3.2" if AI_MODEL_TYPE == 'llama' else "gemini-pro"
+        )
+        
+        # Cache the response
+        cache_store[cache_key] = {
+            'response': response,
+            'timestamp': datetime.utcnow()
         }
+        
+        return response
+        
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An error occurred: {str(e)}"
+        )
 
 @app.post("/assess-symptoms", response_model=AssessmentResponse)
 async def assess_kidney_symptoms(request: SymptomAssessmentRequest):
@@ -326,4 +463,11 @@ async def get_emergency_symptoms():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8002)
+    print("Starting Nephrology AI Backend Service...")
+    print(f"Server will be available at: http://localhost:8002")
+    print(f"API Documentation: http://localhost:8002/docs")
+    try:
+        uvicorn.run(app, host="0.0.0.0", port=8002, log_level="info")
+    except Exception as e:
+        print(f"Error starting server: {e}")
+        input("Press Enter to exit...")
