@@ -108,12 +108,7 @@ class ChatMessage(BaseModel):
     content: str
     timestamp: Optional[str] = None
 
-# Duplicate ModelConfig removed - using the one defined earlier
-
-class ChatRequest(BaseModel):
-    message: str
-    conversation_history: List[ChatMessage] = []
-    ai_model_config: Optional[ModelConfig] = None
+# Duplicate ChatRequest class removed - using the one defined earlier
 
 class ChatResponse(BaseModel):
     response: str
