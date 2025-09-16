@@ -19,8 +19,14 @@ load_dotenv()
 
 # AI Model Configuration
 AI_MODEL_TYPE = os.getenv('AI_MODEL_TYPE', 'llama').lower()
-LLAMA_API_URL = os.getenv('LLAMA_API_URL', 'http://localhost:8000')
+LLAMA_API_URL = os.getenv('LLAMA_API_URL', 'http://localhost:11434')
 LLAMA_API_KEY = os.getenv('LLAMA_API_KEY')
+
+# Ollama/Phi Model Configuration
+OLLAMA_MODEL = os.getenv('OLLAMA_MODEL', 'phi3:3.8b')
+PHI_TEMPERATURE = float(os.getenv('PHI_TEMPERATURE', '0.7'))
+PHI_MAX_TOKENS = int(os.getenv('PHI_MAX_TOKENS', '1000'))
+PHI_TOP_P = float(os.getenv('PHI_TOP_P', '0.9'))
 
 # Initialize Gemini (fallback)
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
@@ -55,15 +61,22 @@ load_dotenv()
 # Configure AI Model based on environment
 print(f"AI Model Type: {AI_MODEL_TYPE}")
 if AI_MODEL_TYPE == 'llama':
-    print(f"Llama API URL: {LLAMA_API_URL}")
+    print(f"Ollama API URL: {LLAMA_API_URL}")
+    print(f"Ollama Model: {OLLAMA_MODEL}")
+    print(f"Phi Configuration:")
+    print(f"  - Temperature: {PHI_TEMPERATURE}")
+    print(f"  - Max Tokens: {PHI_MAX_TOKENS}")
+    print(f"  - Top P: {PHI_TOP_P}")
 else:
     print("Using Gemini API as fallback")
 
 # Pydantic models
 class ModelConfig(BaseModel):
     model_type: str = AI_MODEL_TYPE
-    temperature: float = 0.7
-    max_tokens: Optional[int] = 1000
+    model_name: str = OLLAMA_MODEL
+    temperature: float = PHI_TEMPERATURE
+    max_tokens: Optional[int] = PHI_MAX_TOKENS
+    top_p: float = PHI_TOP_P
 
 class ChatMessage(BaseModel):
     role: str

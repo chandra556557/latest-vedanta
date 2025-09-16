@@ -125,15 +125,21 @@ class LlamaService:
         messages.extend(conversation_history)
         messages.append({"role": "user", "content": prompt})
         
+        # Get model configuration from environment
+        model_name = os.getenv('OLLAMA_MODEL', 'phi3:3.8b')
+        default_temp = float(os.getenv('PHI_TEMPERATURE', '0.7'))
+        default_max_tokens = int(os.getenv('PHI_MAX_TOKENS', '1000'))
+        default_top_p = float(os.getenv('PHI_TOP_P', '0.9'))
+        
         # Prepare the request payload for Ollama API
         payload = {
-            "model": "phi3:3.8b",
+            "model": model_name,
             "messages": messages,
             "stream": False,
             "options": {
-                "temperature": min(float(kwargs.get('temperature', 0.7)), 1.0),
-                "num_predict": min(int(kwargs.get('max_tokens', 1000)), 4000),
-                "top_p": float(kwargs.get('top_p', 0.9))
+                "temperature": min(float(kwargs.get('temperature', default_temp)), 1.0),
+                "num_predict": min(int(kwargs.get('max_tokens', default_max_tokens)), 4000),
+                "top_p": float(kwargs.get('top_p', default_top_p))
             }
         }
         
