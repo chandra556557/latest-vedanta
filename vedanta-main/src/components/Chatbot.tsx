@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, X, MessageCircle } from 'lucide-react';
 import { useChat } from '../contexts/ChatContext';
 import { sendMessageToGemini, isGeminiConfigured, testGeminiConnection } from '../services/geminiService';
+import { sendMessageToNephroAgent, isNephrologyConfigured, testNephrologyConnection } from '../services/nephrologyService';
 import { getHealthTip } from '../services/healthoService';
 
 interface Message {
@@ -26,23 +27,35 @@ const Chatbot = () => {
       const initializeChat = async () => {
         let welcomeText = "Hello! I'm Vedanta's AI Assistant. ";
         
-        if (isGeminiConfigured()) {
-          // Test connection on startup
-          const connectionTest = await testGeminiConnection();
-          if (connectionTest.success) {
-            welcomeText += "I'm powered by Google Gemini and ready to help with your health questions. How can I assist you today?";
-          } else {
-            welcomeText += "I'm currently unable to connect to my knowledge base. Please check your internet connection and try again, or contact Vedanta Hospitals directly for urgent matters.";
+        // Check both AI services
+        const geminiAvailable = isGeminiConfigured();
+        const nephroAvailable = isNephrologyConfigured();
+        
+        if (nephroAvailable) {
+          const nephroTest = await testNephrologyConnection();
+          if (nephroTest.success) {
+            welcomeText += "I'm powered by our specialized Nephrology AI (Phi model) and ready to help with kidney health questions. ";
           }
-        } else {
-          welcomeText += "Note: My advanced features are currently unavailable. I can still provide basic health tips. How can I help you today?";
         }
+        
+        if (geminiAvailable) {
+          const geminiTest = await testGeminiConnection();
+          if (geminiTest.success) {
+            welcomeText += "I also have access to Google Gemini for general health questions. ";
+          }
+        }
+        
+        if (!nephroAvailable && !geminiAvailable) {
+          welcomeText += "Note: My advanced AI features are currently unavailable. I can still provide basic health tips. ";
+        }
+        
+        welcomeText += "How can I assist you today?";
         
         const welcomeMessage: Message = {
           id: Date.now(),
           text: welcomeText,
           sender: 'bot',
-          options: ['Ask about health', 'Get health tips', 'Book appointment', 'Contact info']
+          options: ['Kidney/Nephrology questions', 'General health questions', 'Get health tips', 'Contact info']
         };
         setMessages([welcomeMessage]);
       };
@@ -86,7 +99,7 @@ const Chatbot = () => {
         const tip = await getHealthTip();
         const botMessage: Message = {
           id: Date.now() + 2,
-          text: `💡 ${tip.title}\n\n${tip.tip}${tip.details ? '\n\n' + tip.details : ''}`,
+          text: `💡 ${tip.title}\n\n${tip.tip}${tip.details ? '\n\n' + tip.details : ''}`,
           sender: 'bot',
           isHealthTip: true,
           tipCategory: tip.category,
@@ -96,6 +109,44 @@ const Chatbot = () => {
           ...prev.filter(msg => !msg.isTyping),
           botMessage
         ]);
+      } else if (
+        // Nephrology/Kidney related queries - use Phi model
+        lowerInput.includes('kidney') ||
+        lowerInput.includes('nephro') ||
+        lowerInput.includes('dialysis') ||
+        lowerInput.includes('creatinine') ||
+        lowerInput.includes('urea') ||
+        lowerInput.includes('renal') ||
+        lowerInput.includes('urinary') ||
+        lowerInput.includes('bladder') ||
+        lowerInput.includes('urine')
+      ) {
+        if (isNephrologyConfigured()) {
+          const response = await sendMessageToNephroAgent(trimmed);
+          const botMessage: Message = {
+            id: Date.now() + 2,
+            text: `🩺 **Nephrology AI (Phi Model):**\n\n${response.response}`,
+            sender: 'bot',
+            options: ['Ask another kidney question', 'Get general health info', 'Contact nephrology dept']
+          };
+          setMessages(prev => [
+            ...prev.filter(msg => !msg.isTyping),
+            botMessage
+          ]);
+        } else {
+          // Fallback to Gemini if nephrology service unavailable
+          const response = await sendMessageToGemini(trimmed);
+          const botMessage: Message = {
+            id: Date.now() + 2,
+            text: response.response + "\n\n*Note: Specialized nephrology AI is currently unavailable.*",
+            sender: 'bot',
+            options: response.options
+          };
+          setMessages(prev => [
+            ...prev.filter(msg => !msg.isTyping),
+            botMessage
+          ]);
+        }
       } else {
         // Use Google Gemini API for other queries
         const response = await sendMessageToGemini(trimmed);
